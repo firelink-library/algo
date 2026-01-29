@@ -1,0 +1,255 @@
+---
+title: Workspaces
+sidebar:
+  order: 2
+slug: ros-workspaces
+---
+
+Quando trabalhamos com Python, aprendemos a criar pacotes utilizando o `pip`.
+
+Quando trabalhamos em javascript, aprendemos a gerenciar pacotes utilizando o
+`npm`.
+
+Quando trabalhamos em rust, utilizamos o `cargo`. 
+
+Com ROS não é diferente. Ele oferece os conceitos de **workspaces** e
+**pacotes**. Para isso, é preciso utilizar o gerenciador de pacotes do ROS, o
+`colcon`. 
+
+## 1. Definições básicas
+
+### 1.1. Pacote ROS
+
+*Por que criamos pacotes?*
+
+Essa é uma pergunta fundamental para qualquer linguagem, não só para o
+desenvolvimento em ROS e essa pergunta também nos leva a um apontamento que
+define **o que é um pacote** através da sua **função** em um projeto.
+
+Projetos que envolvem código muitas vezes tem uma complexidade elevada e
+envolvem o trabalho de muitas pessoas. Nós criamos pacotes para que seja
+possível desacoplar essa complexidade. O que significa desacoplar a
+complexidade? Significa que um desenvolvedor que precisa desenvolver um
+frontend não precisa se preocupar em saber como implementar um sistema de
+deteção de objetos em imagens. Significa que podemos criar unidades de código
+que podem interagir entre si e diminuir a carga cognitiva necessária para criar
+um sistema complexo.
+
+Os pacotes em ROS servem justamente para isso: diminuir a carga cognitiva
+necessária para criar aplicações robóticas. Que implementar um algoritmo de
+localização e mapeamento simultâneo? Tem um pacote de alguém que gastou muito
+tempo nesse problema que você pode usar sem precisar gastar muito tempo. Que
+utilizar filtro de kalmann? Tem um pacote de alguém que gastou muito tempo
+nesse problema... Quer transferir imagens em tempo real através do ROS? Tem um
+pacote...
+
+Não preciso nem dizer que espera-se, portanto, que você saiba interagir com um
+pacote, criando-os e usando-os sempre que precisar.
+
+**Instalando pacotes ROS**
+
+Para instalar pacotes ROS, temos dois caminhos distintos:
+
+1. Baixando o código fonte e utilizando o `colcon` para compilar o pacote; ou
+2. Instalando o pacote utilizando o `apt`.
+
+O caminho que vamos usar na maior parte das vezes é a instalação utilizando o
+gerenciador de pacotes do Ubuntu, o `apt`. Para isso, você deve saber o padrão
+de nomenclatura para pacotes disponíveis no `apt`:
+
+```bash
+ros-<distro-ros>-<pacote>
+```
+
+Aqui, o `distro-ros` descreve a versão do ROS que está sendo utilizada e o
+`pacote` é o nome do pacote. Um exemplo é o pacote
+`ros-humble-turtlebot3-messages`. Aqui temos um pacote para o `ROS 2 Humble` e
+o nome do pacote é o `turtlebot3-messages`. Esse pacote está dentro do
+`workspace` do `turtlebot3` e define os tipos de mensagens que são necessárias
+para interagir com o robô turtlebot3.
+
+**Criando pacotes ROS**
+
+Para criar pacotes ROS, precisamos primeiro entender a unidade que serve para
+organizar conjuntos de pacotes ROS, o `workspace`. Então, vamos ver o que é um
+workspace.
+
+
+### 1.2. Workspace ROS
+
+Um workspace ROS nada mais é do que um **diretório** onde é possível encontrar
+**um ou mais pacotes ROS**. A utilidade dessa organização é que com um
+workspace é possível instalar vários pacotes de uma vez só e também cada
+workspace conta com um script de setup similar ao do ROS em si, mas esse serve
+para configurar as definições de executáveis dos pacotes contidos no workspace.
+
+**Exemplo**
+
+Os pacotes relacionados ao Turtlebot (o robô utilizado no módulo) estão
+organizados em um workspace. Nesse workspace podemos encontrar, entre outras
+coisas:
+
+* O pacote que define as mensages básicas para interagir com o turtlebot;
+* Um pacote que implementa o algoritmo de mapeamento e navegação simultânea do
+  turtlebot;
+* Arquivos de configuração que definem a cadeia cinemática (oi Geraldo s2) do
+  robô.
+
+Uma das principais vantagens de se ter todos os pacotes relacionados a um mesmo
+projeto aglomerados em um único workspace é o fato de que é possível **compilar
+todos os pacotes de um workspace de uma vez só**. Mais para frente vamos ver
+como fazer isso, mas trata-se de uma vantagem muito grande para quem quer
+entregar um projeto complexo que é composto por muitos pacotes e conseguir
+fazer o setup do projeto em um único comando.
+
+Beleza, mas como podemos criar um workspace? Vamos ver exatamente como se faz
+isso na próxima seção, em que vamos tratar sobre o setup do seu primeiro
+projeto ROS.
+
+## 2. Criando seu primeiro projeto
+
+### 2.1. Criando um workspace
+
+O primeiro passo para criar o seu primeiro projeto ROS é criar um workspace.
+Para criar um workspace ROS, basta criar um diretório qualquer e, dentro dele,
+adicionar um subdiretório chamado `src`, que é onde vão ficar os nossos pacotes.
+
+:::tip dica
+
+O argumento `-p` do comando `mkdir` faz com que seja possível criar todos os
+diretórios no caminho até o diretório final. No exemplo abaixo queremos criar
+`meu_workspace/src`, mas o diretório `meu_workspace` ainda não existe. Com esse
+argumento é possível criar os dois diretórios ao mesmo tempo.
+
+:::
+
+```bash
+mkdir -p meu_workspace/src
+```
+
+### 2.2. Adicionando um pacote de exemplo
+
+Ok, mas e os pacotes? Bom, como ainda não temos nenhum pacote, vamos testar
+nosso workspace pegando um pacote de exemplo disponibilizado pelos criadores do
+ROS.
+
+Entre no diretório do seu workspace e no subdiretório `src`:
+
+```bash
+cd meu_workspace/src
+```
+
+E vamos clonar o repositório que guarda o pacote de exemplo com:
+
+```bash
+git clone https://github.com/ros/ros_tutorials.git -b humble 
+```
+
+É muito comum um pacote ROS ter dependências. Para garantir que temos as
+dependências necessárias para nosso pacote, precisamos rodar o `rosdep`. Para
+isso, é necessário garantir que você tem o `rosdep` instalado. Use:
+
+```bash 
+sudo apt install python3-rosdep
+```
+
+Após a instalação, precisamos configurar o rosdep. Para isso, usaremos dois
+comandos em sequência: 
+
+```bash 
+sudo rosdep init
+```
+
+```bash
+rosdep update
+```
+
+Volte para o diretório raíz do seu workspace e, logo em seguida, rode o
+seguinte comando para baixar todas as dependências:
+
+```bash
+rosdep install -i --from-path src --rosdistro humble -y
+```
+
+Pronto! Esse comando já vai checar todos os seus pacotes e instalar as
+depedências automaticamente. A seguir, vamos compilar o nosso pacote usando:
+
+```bash 
+colcon build
+```
+:::caution Aviso
+
+Para executar o comando abaixo você precisa, antes, instalar o seguinte pacote:
+
+```bash
+sudo apt install python3-colcon-common-extensions
+```
+
+Caso tenha utilizado meu script `ros-install` com todas as opções selecionadas,
+esse pacote já vai ter sido instalado.
+
+:::
+
+Ao rodar esse comando, nosso diretório mudou. Vamos dar uma olhada em como ele
+está? Lembre-se que antes ele só tinha o diretório `src` com nosso pacote
+exemplo antes.
+
+```bash
+.
+├── build
+│  ├── COLCON_IGNORE
+│  └── turtlesim
+├── install
+│  ├── _local_setup_util_ps1.py
+│  ├── _local_setup_util_sh.py
+│  ├── COLCON_IGNORE
+│  ├── local_setup.bash
+│  ├── local_setup.ps1
+│  ├── local_setup.sh
+│  ├── local_setup.zsh
+│  ├── setup.bash
+│  ├── setup.ps1
+│  ├── setup.sh
+│  ├── setup.zsh
+│  └── turtlesim
+├── log
+│  ├── build_2024-04-23_19-34-44
+│  ├── build_2024-04-23_20-05-36
+│  ├── COLCON_IGNORE
+│  ├── latest -> latest_build
+│  └── latest_build -> build_2024-04-23_20-05-36
+└── src
+   └── ros_tutorials
+```
+
+Note que surgiram as pastas `install`, `build` e `log` em seu workspace. Caso
+queira subir seu ws para um repositório, não esqueça de adicionar essas pastas
+ao `.gitignore`!
+
+Para poder rodar o seu pacote, precisamos agora apenas dar `source` no script
+de configuração do workspace. Fazemos isso com: 
+
+```bash
+source install/local_setup.bash
+```
+
+:::tip Dica
+
+A diferença entre o `local_setup` e o `setup` é que o setup local foi feito
+para configurar apenas os executáveis apenas do workspace local (o diretório em
+que você se encontra atualmente). A versão `setup` foi feita para configurar
+workspaces instalados globalmente.
+
+:::
+
+Pronto! Seu workspace ROS está configurado e com um pacote funcional. Mas, como
+vamos testar? Você pode ter notado que o pacote compilado pelo comando `colcon
+build` foi o `turtlesim`. Nós já temos esse pacote instalado, mas agora estamos
+usando uma versão local. Beleza, mas como vamos saber se estamos de fato usando
+a versão local ou a do sistema? Simples, vamos colocar uma mensagem especial no
+`turtle_teleop_key`! =D
+
+:::tip Dica
+
+Note que o turtlesim é um pacote inteiramente feito em `C++`. Nós vamos usar
+majoritariamente Python nesse módulo, mas se quiser ver como é por dentro um

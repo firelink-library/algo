@@ -6,12 +6,12 @@ import catppuccin from '@catppuccin/starlight';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://firelink-library.github.io',
-  base: '/', // TODO: adicionar base do repositorio
+  base: '/algo',
   outDir: 'dist',
   publicDir: 'static',
   integrations: [
     starlight({
-      title: '', // TODO: adicionar titulo
+      title: 'Algoritmos e linguagens',
       logo: {
         src: './src/assets/logos/logo.png'
       },
@@ -22,7 +22,7 @@ export default defineConfig({
       social: [{
         icon: 'github',
         label: 'GitHub',
-        href: '' // TODO: adicionar link repositorio
+        href: 'https://github.com/firelink-library/algo'
       }],
       plugins: [
         catppuccin({
@@ -31,12 +31,29 @@ export default defineConfig({
         })
       ],
       sidebar: [
-        // TODO: adicionar seções. Ver exemplo abaixo
-        // Para mais opções de config
-        // Acesse: https://starlight.astro.build/guides/sidebar/
         {
-          label: 'Introdução',
-          autogenerate: { directory: 'intro' }, collapsed: true
+          label: 'Pensamento computacional',
+          autogenerate: { directory: 'pensamento' }, collapsed: true
+        },
+        {
+          label: 'Linguagens e ferramentas',
+          autogenerate: { directory: 'linguagens' }, collapsed: true
+        },
+        {
+          label: 'Estruturas de dados',
+          autogenerate: { directory: 'estruturas' }, collapsed: true
+        },
+        {
+          label: 'Projeto e análise de algoritmos',
+          autogenerate: { directory: 'algoritmos' }, collapsed: true
+        },
+        {
+          label: 'Paradigmas de programação',
+          autogenerate: { directory: 'paradigmas' }, collapsed: true
+        },
+        {
+          label: 'Linguagens formais e compiladores',
+          autogenerate: { directory: 'compiladores' }, collapsed: true
         },
       ],
     }),

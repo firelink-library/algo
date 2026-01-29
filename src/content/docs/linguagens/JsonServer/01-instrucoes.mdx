@@ -1,0 +1,74 @@
+---
+title: Gerando uma API REST de um Arquivo
+sidebar_position: 1
+slug: /json-server
+---
+
+Pessoal o objetivo desta seção é estudar a utilização da ferramenta: [Json-Server](https://github.com/typicode/json-server). Ela permite criar uma API Rest de um arquivo JSON que traz a estrutura de dados desejada.
+
+Ela permite a exposição da API criada na rede local e também adição de novos dados.
+
+## 1. Instalação
+
+O ***Json-Server*** foi escrito em JavaScript, para sua utilização, vai ser necessária apenas o [Node.js](https://nodejs.org/pt)(recomendo a instalação utilizando o [nvm](https://github.com/nvm-sh/nvm)) instalado na máquina.
+
+Para realizar a instalação do pacote, utilizar:
+
+```bash
+# Dentro do diretório do projeto
+npm install json-server
+```
+
+## 2. Utilização
+
+Agora para sua utilização, basta fornecermos um arquivo `json` que vai trazer a estrutura desejada. Por exemplo, este arquivo foi chamado de `meu-server.json`:
+
+```json
+{
+    "usuarios":[
+        { "id": 1, "name": "Murilo", "pass": "1234"},
+        { "id": 2, "name": "Goku", "pass": "1234"},
+        { "id": 3, "name": "Vegeta", "pass": "1234"}
+    ],
+    "posts":[
+        {"id":1, "user_id":1, "post": "teste"},
+        {"id":2, "user_id":1, "post": "teste234"},
+        {"id":3, "user_id":2, "post": "mais uma lib JS?"},
+        {"id":4, "user_id":3, "post": "pum"},
+        {"id":5, "user_id":3, "post": "pum pum"}
+    ]
+}
+```
+
+Para executar o servidor, utilizar o comando:
+
+```bash
+npx json-server meu-server.json
+```
+
+Agora, no terminal que executamos o comando, vamos ver a seguitne mensagem:
+
+```bash
+JSON Server started on PORT :3000
+Press CTRL-C to stop
+Watching dados.json...
+
+( ˶ˆ ᗜ ˆ˵ )
+
+Index:
+http://localhost:3000/
+
+Static files:
+Serving ./public directory if it exists
+
+Endpoints:
+http://localhost:3000/usuarios
+http://localhost:3000/posts
+```
+
+Repare que além de trazer as rotas que estão disponíveis, ele também trouxe uma solução para fornecer arquivos estáticos.
+
+## 3. Geração de Dados
+
+Para facilitar o desenvolvimento, estou deixando mais um snippet de código para gerar esse arquivo json. Espero que ajude!
+
