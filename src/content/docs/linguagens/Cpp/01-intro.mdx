@@ -4,3 +4,185 @@ sidebar:
   order: 1
 slug: cpp-intro
 ---
+
+Boa pessoal, vamos começar a programar em C++!💻 
+O foco é construir uma **base computacional**: entender o que é um programa, como ele é executado e como escrever os primeiros códigos. Não vamos nos preocupar com desempenho ou recursos avançados — apenas com o início da programação.
+
+C++ é uma **linguagem compilada**, onde o código que você escreve (arquivo fonte) é transformado por um **compilador** em um programa executável que o sistema operacional roda. Esse processo de compilação acontece antes da execução; depois de compilar, você roda o executável. 
+
+> "Calma lá Murilão, mas qual o significado disso?"
+
+Boa pergunta, quando trabalhamos com uma linguagem compilada, temos algumas diferenças que devemos ter em mente. A primeira delas, é que o que estamos escrevendo não pode ser executado diretamente pelo sistema operacional. Ou seja, as instrução do nosso programa não podem ser interpretadas pelo computador diretamente. O que significa, que precisamos de algum elemento que consiga traduzir nossos códigos para uma linguagem que o computador consiga entender para executar eles. Ai que entre o compilador. 
+
+A sua função é transformar nosso programa em um conjunto de dados binários que o processador consiga interpretar e executar. Os compiladores surgiram nos anos 1950, quando se passou a escrever programas em linguagens de nível mais alto  em vez de só em linguagem de máquina ou assembly. Um marco é o compilador de Fortran (1957), desenvolvido na IBM sob a liderança de John Backus, que traduzia programas em Fortran para código de máquina. Nessa mesma época, Grace Hopper e sua equipe trabalhavam em tradutores automáticos (como o A-0), que deram base às ideias de compilação. A função de um compilador é ler o código fonte escrito em uma linguagem (por exemplo C++) e gerar um programa equivalente em uma linguagem que o hardware — ou uma máquina virtual — consiga executar (em geral código de máquina ou bytecode). Assim, o compilador faz a ponte entre a linguagem que o programador usa e a linguagem que a máquina executa, permitindo que o mesmo código seja reutilizado em diferentes máquinas e que erros de sintaxe e parte dos erros de uso da linguagem sejam detectados antes da execução.
+
+Com isso em mente, vamos direto ao uso.
+
+## 1. O que você precisa
+
+Para programar em C++, você precisa de:
+
+- **Compilador:** um programa que lê seu código e gera o executável. Exemplos: [GCC](https://gcc.gnu.org/) (comando `g++`), [Clang](https://clang.llvm.org/) (`clang++`) ou, no Windows, [Visual Studio](https://visualstudio.microsoft.com/) (MSVC) ou [MinGW](https://www.mingw-w64.org/).
+- **Editor de texto ou IDE:** onde você escreve o código. Qualquer editor serve; uma IDE facilita compilar e rodar com um clique.
+
+:::tip[Verificando o compilador]
+No terminal, digite `g++ --version` ou `clang++ --version`. Se aparecer a versão, o compilador está instalado e no PATH.
+:::
+
+:::danger[Recomendação para iniciantes]
+
+Pessoal, aqui deixo uma recomendação, em especial para quem está iniciando no desenvolvimento ou começando agora a trabalhar com esse tipo de ferramentas: procurem utilizar IDE, ambientes integrados de desenvolvimento. Qual a principal diferença: eles, muitas vezes, vão trazer os compiladores junto do editor sem grandes problemas para o usuário.
+
+Assim, o foco fica no desenvolvimento e não na configuração do ambiente. Não entenda mal, essa etapa é importante, mas no momento incorreto, pode trazer uma sobrecarga cognitiva que vai atralhar o seu desenvolvimento.
+
+Dito isso, minha recomendação:
+
+- *Windows:* [Code Blocks](https://sourceforge.net/projects/codeblocks/files/Binaries/25.03/Windows/codeblocks-25.03mingw-setup.exe)
+- *Linux:* [Code Blocks](https://www.codeblocks.org/downloads/binaries/) - verificar a versão do seu sistema operacional
+- *MacOS:* Xcode
+
+:::
+
+## 2. O primeiro programa
+
+Todo programa C++ executável precisa de uma função chamada `main`: é por ela que a execução começa. Um exemplo mínimo que só imprime uma mensagem é:
+
+```cpp
+#include <iostream>
+
+int main() {
+    std::cout << "Olá, mundo!" << std::endl;
+    return 0;
+}
+```
+
+O que aparece aí:
+
+- **`#include <iostream>`** — inclui a parte da biblioteca padrão que permite entrada e saída (ler do teclado e imprimir na tela).
+- **`int main()`** — define a função principal; o programa começa aqui.
+- **`std::cout << ...`** — envia o que está à direita para a saída padrão (o terminal). `std::endl` pula uma linha.
+- **`return 0;`** — indica que o programa terminou sem erro (convenção para o sistema operacional).
+
+Salve o código em um arquivo, por exemplo `ola.cpp`. No terminal, na pasta do arquivo:
+
+```bash
+g++ -o ola ola.cpp
+./ola
+```
+
+(O primeiro comando gera o executável `ola`; o segundo roda. No Windows, use `ola.exe` ou apenas `ola` dependendo do ambiente.)
+
+
+Em C++, a biblioteca padrão (entrada/saída, strings, containers, etc.) fica no *namespace std*. O prefixo *std::* indica que o nome que vem em seguida pertence a esse namespace — por exemplo, `std::cout` é o cout da biblioteca padrão. Isso evita conflito com outros nomes: se você criar uma variável ou função chamada cout no seu código, ela não se mistura com o cout da biblioteca, que continua sendo std::cout. Usar std:: deixa explícito que você está usando recursos da biblioteca padrão e é uma prática comum em material didático e em projetos que preferem clareza à economia de digitação.
+
+Para não precisar escrever std:: toda vez, podemos usar a diretiva using. Com using namespace std;, todos os nomes do namespace std passam a ser usados sem prefixo no arquivo (ou no bloco) em que a diretiva aparece. Outra opção é ser mais seletivo: using std::cout; e using std::cin; trazem só cout e cin para o escopo, reduzindo o risco de conflitos. Em códigos pequenos ou em material introdutório isso deixa o programa mais curto e legível; em projetos maiores costuma-se evitar using namespace std no topo do arquivo para não “poluir” o escopo com todos os nomes da biblioteca padrão.
+
+```cpp
+#include <iostream>
+
+using std::cout;
+using std::cin;
+using std::endl;
+
+int main() {
+    int a, b;
+    cout << "Digite dois números: ";
+    cin >> a >> b;
+    cout << "Soma: " << (a + b) << endl;
+    return 0;
+}
+```
+
+Aqui, cout, cin e endl são usados sem o prefixo std:: porque foram trazidos ao escopo com using. O comportamento é o mesmo do código que usa std::cout, std::cin e std::endl explicitamente.
+
+Uma outra forma é com o `using namespace std;`, que traz todos os elementos disponíveis no namespace std, sem o prefixo.
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+int main() {
+    int a, b;
+    cout << "Digite dois números: ";
+    cin >> a >> b;
+    cout << "Soma: " << (a + b) << endl;
+    return 0;
+}
+```
+
+:::tip[namespace]
+
+Um namespace em C++ é um mecanismo que agrupa nomes (variáveis, funções, classes, etc.) dentro de um “espaço de nomes”. Assim, o mesmo identificador pode existir em namespaces diferentes sem conflito: por exemplo, std::cout e um cout definido em outro namespace são coisas distintas. O compilador usa o namespace para saber exatamente qual entidade você está referenciando. A biblioteca padrão do C++ coloca seus recursos no namespace std; por isso usamos std::cout, std::cin, etc. Namespaces ajudam a organizar código grande, a evitar colisões de nomes entre bibliotecas e a deixar explícita a origem de cada nome.
+
+Você usa um nome de um namespace de duas formas: com o nome qualificado (ex.: std::cout) ou trazendo o nome para o escopo atual com using (ex.: using std::cout; ou using namespace std;). Definir um namespace seu é feito com a palavra-chave namespace seguida do nome e de um bloco { } com as declarações. Em resumo: namespace é o “sobrenome” que desambigua e organiza os nomes no C++.
+
+Mas calma! Vamos retomar esse conceito quando avançarmos mais com a linguagem!
+
+:::
+
+## 3. Variáveis e tipos básicos
+
+Um programa trabalha com **dados** armazenados em **variáveis**. Em C++ você declara o **tipo** da variável e, se quiser, já dá um valor a ela.
+
+Alguns tipos básicos:
+
+| Tipo     | Descrição breve              | Exemplo de valor |
+|----------|------------------------------|------------------|
+| `int`    | Números inteiros             | `42`, `-7`       |
+| `double` | Números reais (ponto flutuante) | `3.14`, `-0.5` |
+| `char`   | Um caractere                 | `'A'`, `'9'`     |
+| `bool`   | Verdadeiro ou falso          | `true`, `false`  |
+
+Exemplo de declaração e uso:
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+int main() {
+    int idade = 20;
+    double altura = 1.75;
+
+    cout << "Idade: " << idade << endl;
+    cout << "Altura: " << altura << endl;
+
+    return 0;
+}
+```
+
+Aqui, **variáveis** guardam valores e **`cout`** os exibe. Podemos encadear várias saídas com `<<`.
+
+Para **ler** dados digitados pelo usuário, usamos **`cin`** com o operador `>>`:
+
+```cpp
+#include <iostream>
+
+using namespace std;
+
+int main() {
+    int a, b;
+    cout << "Digite dois números: ";
+    cin >> a >> b;
+
+    int soma = a + b;
+    cout << "Soma: " << soma << endl;
+
+    return 0;
+}
+```
+
+- **`cin >> a >> b`** — lê dois valores do teclado e armazena em `a` e `b` (separados por espaço ou Enter).
+- **`int soma = a + b`** — calcula a soma e guarda em uma nova variável.
+
+Esse é o padrão básico: declarar variáveis, ler com `cin`, fazer cálculos e mostrar resultados com `cout`.
+
+Resumo do fluxo: escrever, compilar, executar:
+
+1. **Escrever** o código em um arquivo (por exemplo `.cpp`).
+2. **Compilar** com o compilador (ex.: `g++ -o meu_programa meu_programa.cpp`).
+3. **Executar** o programa gerado (ex.: `./meu_programa` no Linux/macOS ou `meu_programa.exe` no Windows).
+
+Se houver erro de sintaxe, o compilador mostra mensagens na linha em que detectou o problema. Corrija o código e compile de novo.
+

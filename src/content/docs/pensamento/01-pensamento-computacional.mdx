@@ -1,0 +1,114 @@
+---
+title: Definição do Pensamento Computacional
+sidebar:
+  order: 1
+slug: pc
+---
+
+Beleza, aqui agora temos um desafio interessante: compreender o que é o pensamento computacional e como ele pode ser utilizado para construir sistemas computacionais.
+
+> "Mas Murilo, não parece bastante óbvio que o pensamento computacional é para construir sistemas computacionais? Por sinal, o que é cada um e suas diferenças?"
+
+Ótima pergunta! Vamos construir essas definições de forma que vocês possam não só entender o conceito, mas **aplicá-lo** para melhorar o desempenho em disciplinas de programação, algoritmos e engenharia de software.
+
+## 1. O que é Pensamento Computacional?
+
+**Pensamento computacional** é uma forma de raciocinar sobre problemas de modo que a solução possa ser descrita de forma clara, passo a passo, e — quando for o caso — executada por um agente (humano ou máquina). Não é “pensar como um computador”; é **organizar o pensamento** para que problemas complexos se tornem tratáveis e comunicáveis. 
+
+A expressão “pensamento computacional” ganhou destaque em 2006, quando Jeannette Wing, então diretora do Departamento de Ciência da Computação da Carnegie Mellon University, publicou o artigo “[Computational Thinking](https://dl.acm.org/doi/10.1145/1118178.1118215)” na revista Communications of the ACM. Wing defendeu que o raciocínio baseado em conceitos da computação — como decomposição, abstração e algoritmos — deveria ser visto como uma competência fundamental, útil não só para programadores, mas para qualquer pessoa que precise formular e resolver problemas de forma sistemática. As ideias por trás desse tipo de raciocínio, porém, vêm de antes: estão ligadas ao trabalho de [Seymour Papert](https://dailypapert.com/wp-content/uploads/2021/02/Constructionism-NSF-Proposal.pdf) (décadas de 1960–80) com a linguagem LOGO e o constructionismo, que já enfatizava aprender a pensar por meio da construção de soluções e do uso de conceitos computacionais. De forma mais ampla, a noção de descrever soluções como sequências de passos bem definidos remonta aos fundamentos da computação, em especial aos trabalhos de Alan Turing e à noção de algoritmo. Assim, o “pensamento computacional” não é uma invenção isolada: é a nomeação e a divulgação de um conjunto de formas de raciocínio que a ciência da computação consolidou ao longo do século XX e que hoje se difundem na educação e em outras áreas.
+
+:::tip[Em uma frase]
+Pensamento computacional é a habilidade de formular problemas e expressar soluções de forma que possam ser executadas de maneira sistemática.
+:::
+
+Podemos olhar para esse conceito, pensamento em escrever código, como: antes de escrever código, vocês conseguem **decompor** o problema, **reconhecer padrões**, **abstrair** o que importa e **especificar os passos** da solução. O código passa a ser uma consequência desse raciocínio, e não o ponto de partida.
+
+## 2. Os pilares do pensamento computacional
+
+O fundamento do pensamento computacional costuma ser descrito em quatro pilares. Dominar cada um deles ajuda diretamente no desempenho em disciplinas de algoritmos e programação.
+
+### 2.1 Decomposição
+
+**Decomposição** é quebrar um problema grande em subproblemas menores e mais simples.
+
+- Por que importa: um problema único e difícil vira vários problemas menores que vocês já sabem (ou podem aprender) a resolver.
+- Na prática: ao receber um enunciado, a primeira pergunta é: *“Em que partes menores eu consigo dividir isso?”*
+
+:::note[Exemplo rápido]
+“Implementar um sistema de login” pode ser decomposto em: validar formato do e-mail, consultar usuário no banco, verificar senha (hash), gerar token, retornar resposta. Cada parte pode ser testada e pensada separadamente.
+:::
+
+**Como melhorar:** sempre que pegar um exercício, escreva em tópicos as “subtarefas” antes de abrir o editor. Treine fazer isso até virar hábito.
+
+### 2.2 Reconhecimento de padrões
+
+**Reconhecimento de padrões** é identificar semelhanças entre o problema atual e outros que vocês já viram ou resolveram.
+
+- Por que importa: evita reinventar a roda; vocês reutilizam ideias (estruturas de dados, fluxos, laços) que já funcionaram.
+- Na prática: perguntem-se *“Isso não se parece com uma busca? Com um ordenação? Com preencher uma tabela?”*
+
+**Como melhorar:** depois de resolver um exercício, anotem em uma frase “que tipo de problema era esse” (ex.: “busca em lista”, “contagem com condição”). Com o tempo, vocês passam a reconhecer esses padrões nos novos enunciados.
+
+### 2.3 Abstração
+
+**Abstração** é focar apenas no que é relevante para a solução e ignorar detalhes que atrapalham.
+
+- Por que importa: reduz a carga mental; vocês trabalham com “objetos” e “operações” em vez de cada detalhe de implementação ao mesmo tempo.
+- Na prática: definir *o que* um módulo ou função deve fazer (entrada, saída, comportamento) antes de decidir *como* fazer nos mínimos detalhes.
+
+**Como melhorar:** ao desenhar uma solução, definam primeiro as “caixas pretas”: nome da função, o que ela recebe, o que ela devolve e uma linha descrevendo o papel dela. Só depois preencham o “como”.
+
+### 2.4 Algoritmos e especificação dos passos
+
+**Algoritmo** é uma sequência bem definida de passos que, seguida, leva à solução do problema.
+
+- Por que importa: é a ponte entre o raciocínio e a implementação; um algoritmo claro vira código com menos erros e mais legível.
+- Na prática: descrever em português ou pseudocódigo os passos (incluindo condições e repetições) antes de codar.
+
+**Como melhorar:** para cada exercício, escrevam 5–10 linhas em português ou pseudocódigo descrevendo o fluxo. Só depois traduzam para a linguagem de programação.
+
+### 2.5 Pensamento computacional x sistema computacional
+
+- **Pensamento computacional:** é o *raciocínio* — decompor, reconhecer padrões, abstrair e definir passos. Não depende de máquina.
+- **Sistema computacional:** é o artefato (programa, aplicação, serviço) que *implementa* uma solução, em geral em uma máquina.
+
+O pensamento computacional é a base para *projetar* e *comunicar* a solução; o sistema computacional é o resultado de *implementar* essa solução (em código, por exemplo). Quanto melhor o primeiro, mais fácil e estável fica o segundo.
+
+Para melhorar o desempenho na resolução de problemas que dependem desse tipo de raciocínio, vale focar em:
+
+1. **Sempre decompor antes de codar** — listar subtarefas no papel ou no editor antes de escrever qualquer função.
+2. **Nomear o tipo de problema** — após cada exercício, classificar (busca, ordenação, contagem, etc.) para criar repertório de padrões.
+3. **Abstrair por interfaces** — definir “o que” cada parte faz (entrada/saída/comportamento) antes do “como”.
+4. **Pseudocódigo antes do código** — escrever os passos em linguagem natural ou pseudocódigo e só depois traduzir para a linguagem da disciplina.
+5. **Revisar com os quatro pilares** — depois de resolver um problema, revisar: onde estava a decomposição? O padrão? A abstração? O algoritmo?
+
+Legal, agora temos bem definido o que é o Pensamento Computacional e como ele pode ser aplicado. Mas será que conseguimos pegar esses pontos para aplicar em alguns problemas?
+
+## 3. Exemplos de Aplicação do Pensamento Computacional
+
+### Exemplo 1: Organizar a lista de tarefas do dia
+
+Situação: você tem várias tarefas (estudo, trabalho, compromissos) e pouco tempo. Quer decidir o que fazer e em que ordem.
+
+Pensamento computacional em uso:
+
+- Decomposição: separar em: (1) listar todas as tarefas, (2) estimar tempo e prazo de cada uma, (3) definir prioridade (urgente/importante), (4) montar uma ordem de execução.
+- Reconhecimento de padrões: perceber que “tarefas com prazo hoje” e “tarefas que dependem de outras” são padrões que já aparecem em outros problemas (como filas ou ordenação por critério).
+- Abstração: ignorar o conteúdo específico de cada tarefa e trabalhar só com: nome, tempo, prazo e prioridade — como “dados” que entram em uma regra.
+- Algoritmo: definir uma regra clara, por exemplo: “ordenar por prazo (mais próximo primeiro); em empate, por prioridade; em novo empate, por tempo menor.” Aplicar a regra sempre do mesmo jeito gera uma “ordem do dia” reproduzível.
+
+Uso: você não precisa de computador; o mesmo raciocínio serve para um app de tarefas (que só automatiza esses passos).
+
+
+### Exemplo 2: Entender por que o elevador “demora” no prédio
+
+Situação: no prédio da faculdade, o elevador parece demorar demais. Você quer explicar o que está acontecendo e, se possível, pensar em como melhorar.
+
+Pensamento computacional em uso:
+
+- Decomposição: dividir o problema em: (1) como o elevador decide para onde ir quando está parado?, (2) como decide se sobe ou desce ao atender um chamado?, (3) quantas pessoas sobem/descem em cada andar em horário de pico? Com isso o problema vira “estratégia de decisão” + “fluxo de pessoas”.
+- Reconhecimento de padrões: perceber que é um problema de fila de atendimento e priorização: chamados são “requisições” e o elevador é um “recurso” que precisa atender em alguma ordem (primeiro que chamou? andar mais próximo? direção atual?).
+- Abstração: deixar de lado detalhes do prédio (cor do elevador, número exato de andares) e focar no modelo: “estados” (elevador parado/subindo/descendo), “eventos” (botão pressionado, chegada em andar), “regra de decisão” (próximo andar a visitar).
+- Algoritmo: descrever a política em passos, por exemplo: “Se está parado, vá ao chamado mais próximo. Se está subindo, atenda só chamados acima até o último; depois inverta e desça atendendo os de baixo.” Isso é um algoritmo (tipo “elevador SCAN”); outras políticas geram outros comportamentos e outros tempos de espera.
+
+Uso: o mesmo raciocínio serve para criticar o sistema atual (“qual algoritmo esse elevador usa?”), para propor melhorias ou para implementar uma simulação em programa (lista de chamados, loop de tempo, regras de decisão).
