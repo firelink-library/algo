@@ -4,3 +4,139 @@ sidebar:
   order: 3
 slug: cpp-poo
 ---
+
+Assim como a seção de introdução à linguagem, orientação a objetos já deve ser
+algo que vocês dominam razoavelmente bem. Sendo assim, vou focar em apenas
+mostrar como se usam esses conceitos em C++.
+
+## Classes e Structs
+
+Em C++, a única diferença entre `class` e `struct` é o acesso padrão:
+- `class`: membros são `private` por padrão.
+- `struct`: membros são `public` por padrão.
+
+No dia a dia, usamos `struct` para pacotes de dados simples e `class` para
+objetos com lógica e encapsulamento.
+
+```cpp
+class Pessoa {
+private:
+  std::string nome;
+  int idade;
+
+public:
+  // Construtor com lista de inicialização
+  Pessoa(std::string n, int i) : nome(std::move(n)), idade(i) {}
+
+  // Método const: garante que não altera o objeto
+  void saudar() const {
+    std::cout << "Olá, meu nome é " << nome << "\n";
+  }
+};
+```
+
+## Construtores e Destrutores
+
+C++ moderno favorece a **lista de inicialização** no construtor. Ela é mais
+eficiente pois evita a construção padrão seguida de atribuição.
+
+- `explicit`: Use em construtores de um único parâmetro para evitar conversões
+  implícitas indesejadas.
+- `~Classe()`: O destrutor. Graças ao RAII, ele é chamado automaticamente ao
+  fim do escopo do objeto.
+
+```cpp
+class Recurso {
+public:
+  explicit Recurso(int id) { /* ... */ }
+  ~Recurso() { /* limpeza automática aqui */ }
+};
+```
+
+## A Regra do Zero
+
+A "Regra do Zero" diz que você não deve escrever destrutores, construtores de
+cópia ou operadores de atribuição se puder usar tipos da biblioteca padrão
+(como `std::vector` ou `std::string`) que já fazem isso por você.
+
+```cpp
+struct Registro {
+  std::string nome;
+  std::vector<int> notas;
+  // O compilador gera automaticamente cópia e movimento corretos aqui.
+};
+```
+
+## Herança e Polimorfismo
+
+Para usar polimorfismo em C++, você precisa de três coisas:
+1. Métodos marcados como `virtual`.
+2. Um **destrutor virtual** na classe base.
+3. Uso de ponteiros (preferencialmente smart pointers) ou referências.
+
+```cpp
+class Forma {
+public:
+  // Essencial para evitar vazamentos em classes derivadas
+  virtual ~Forma() = default;
+  virtual double area() const = 0; // Método puro (classe abstrata)
+};
+
+class Quadrado : public Forma {
+private:
+  double lado;
+public:
+  Quadrado(double l) : lado(l) {}
+  // override: garante que você está realmente sobrescrevendo algo
+  double area() const override { return lado * lado; }
+};
+```
+
+## O Problema do Slicing
+
+Se você passar um objeto por valor em uma hierarquia de classes, ocorre o
+"slicing" (fatiamento): a parte específica da classe derivada é "cortada" e
+apenas a base é copiada.
+
+**Evite isso:** Sempre passe objetos polimórficos por referência (`Base&`)
+ou ponteiro (`std::unique_ptr<Base>`).
+
+```cpp
+void imprimirArea(const Forma& f) { // Correto: usa referência
+  std::cout << f.area() << "\n";
+}
+
+int main() {
+  auto q = std::make_unique<Quadrado>(5.0);
+  imprimirArea(*q);
+}
+```
+
+## Polimorfismo com Smart Pointers
+
+Esta é a forma mais comum de gerenciar coleções de objetos heterogêneos:
+
+```cpp
+#include <vector>
+#include <memory>
+
+int main() {
+  std::vector<std::unique_ptr<Forma>> formas;
+  formas.push_back(std::make_unique<Quadrado>(10.0));
+  // formas.push_back(std::make_unique<Circulo>(5.0));
+
+  for (const auto& f : formas) {
+    std::cout << f->area() << "\n";
+  }
+}
+```
+
+## Resumo de boas práticas
+
+1. Use **listas de inicialização** em construtores.
+2. Use `explicit` para construtores de um argumento.
+3. Use `override` em métodos sobrescritos.
+4. Sempre defina um **destrutor virtual** em classes que servem de base.
+5. Prefira composição à herança quando possível.
+6. Nunca esqueça: polimorfismo exige ponteiros ou referências para evitar
+   slicing.

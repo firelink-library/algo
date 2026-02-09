@@ -4,3 +4,293 @@ sidebar:
   order: 2
 slug: cpp-memoria
 ---
+
+import { Image } from 'astro:assets';
+import vonNeumann from '../../../../assets/linguagens/cpp/von_neumann.jpg';
+
+Você já parou para pensar no que diferencia as linguagens de alto nível das
+linguagens de baixo nível? As ditas "linguagens de sistema".
+
+Talvez você já tenha ouvido falar do termo *garbage collector* e não tenha
+entendido exatamente o que aquilo significava ou por que isso torna linguagens
+mais lentas.
+
+Para entender melhor o que tudo isso significa, vamos falar um pouco sobre
+memória? Para isso, vou voltar um pouco no tempo.
+
+## O modelo de von Neumann
+
+<center>
+  <Image
+    src={vonNeumann}
+    alt="Arquitetura de von Neumann"
+    style={{ height: 'auto' }}
+  />
+</center>
+<p><center>A arquitetura de von Neumann introduziu o conceito de instruções e
+  variáveis armazenadas em memória.</center></p>
+
+Resumidamente, esse modelo descreve um computador com:
+* CPU que busca, decodifica e executa instruções (ciclo fetch-decode-execute).
+* Memória única para programa e dados, endereçada pela CPU.
+* Dispositivos de entrada/saída conectados por barramentos.
+
+Consequências importantes:
+* Programa e dados compartilham o mesmo espaço de memória.
+* Instruções são números na memória; ponteiros são endereços para dados.
+* "Stack" e "heap" são áreas de uso definidas pelo SO/ABI, não pela CPU.
+
+Essa visão ajuda a entender por que, em C++, falamos em endereços, ponteiros,
+frames de stack e objetos alocados no heap.
+
+
+Em C++, você controla a vida útil dos objetos. Diferente de linguagens com
+coletor de lixo, é sua responsabilidade criar e destruir recursos na hora
+certa. A boa notícia: o estilo moderno de C++ favorece RAII (Resource
+Acquisition Is Initialization) e containers da biblioteca padrão, que
+simplificam a maioria dos casos.
+
+Objetivo desta página: entender quando alocar dinamicamente, a diferença entre
+stack e heap, os riscos de ponteiros crus, como detectar vazamentos com
+Valgrind, e como `std::unique_ptr`, `std::shared_ptr` e `std::weak_ptr`
+resolvem problemas do dia a dia.
+
+## Por que alocar dinamicamente?
+
+* Tamanho só conhecido em tempo de execução (ex.: N lido do usuário).
+* Vida útil além do escopo atual (retornar ou guardar para uso posterior).
+* Polimorfismo (armazenar `Base` que pode apontar para `Derived`).
+* Interoperar com APIs em C.
+
+Sempre que possível, prefira containers e tipos da biblioteca padrão:
+* `std::vector`, `std::string`, `std::array` e objetos locais cobrem muitos
+  casos.
+
+Exemplo simples substituindo alocação manual por `std::vector`:
+
+```cpp
+#include <vector>
+#include <iostream>
+
+int main() {
+  int n = 5;
+  std::vector<int> v(n, 0);
+  v[0] = 42;
+  std::cout << v[0] << "\n";
+}
+```
+
+## Heap vs Stack e pequena nota sobre sistemas operacionais
+
+* Stack: alocação automática e muito rápida; vida dos objetos é o escopo da
+  função.
+* Heap: alocação manual (ou via smart pointers/containers); custo maior; vida
+  definida por você.
+
+Intuição rápida:
+
+```
+Stack: [main frame][f frame][g frame]
+cresce/encolhe conforme chamadas
+Heap : objetos espalhados com vida independente do escopo
+```
+
+## Ponteiros clássicos
+
+Ponteiros crus dão controle total, mas facilitam erros.
+
+```cpp
+#include <iostream>
+
+int main() {
+  int* p = new int(42);
+  std::cout << *p << "\n";
+  delete p; // obrigatório
+}
+```
+
+Com arrays, use `delete[]`:
+
+```cpp
+int* arr = new int[10];
+arr[0] = 7;
+delete[] arr; // não use delete simples aqui
+```
+
+Armadilhas comuns:
+* `delete` vs `delete[]`.
+* double free (chamar `delete` duas vezes).
+* dangling pointer (usar após `delete`).
+* retorno precoce/exceções que pulam o `delete`.
+
+Esses problemas praticamente somem ao usar RAII: containers e smart pointers.
+
+## Vazamento de memória
+
+Exemplo que vaza por retorno precoce:
+
+```cpp
+// leak.cpp
+#include <iostream>
+
+struct Foo { int x{42}; };
+
+void f(bool fail) {
+  Foo* p = new Foo();
+  if (fail) return; // vazou
+  std::cout << p->x << "\n";
+  delete p;
+}
+
+int main() { f(true); }
+```
+
+Compile e execute com Valgrind para detectar o vazamento:
+
+```bash
+g++ -std=c++17 -O0 -g leak.cpp -o leak
+valgrind --leak-check=full ./leak
+```
+
+O relatório deve conter algo como: `definitely lost: 16 bytes in 1 blocks`.
+
+Correção simples com `std::unique_ptr` (liberação automática ao sair do
+escopo):
+
+```cpp
+// leak_fixed.cpp
+#include <iostream>
+#include <memory>
+
+struct Foo { int x{42}; };
+
+void f(bool fail) {
+  auto p = std::make_unique<Foo>();
+  if (fail) return;
+  std::cout << p->x << "\n";
+}
+
+int main() { f(true); }
+```
+
+## Ponteiros inteligentes
+
+A biblioteca `<memory>` oferece ponteiros que gerenciam a vida do objeto de
+forma automática.
+
+* `std::unique_ptr<T>`: dono exclusivo. Leve, não copiável. Prefira
+  `std::make_unique`.
+* `std::shared_ptr<T>`: propriedade compartilhada com contagem de
+  referências.
+* `std::weak_ptr<T>`: observador que não mantém o objeto vivo.
+
+### Unique pointer
+
+```cpp
+#include <memory>
+#include <iostream>
+
+int main() {
+  auto p = std::make_unique<int>(42);
+  std::cout << *p << "\n";
+  auto q = std::move(p); // transfere; p vira nullptr
+}
+```
+
+Passando para função (transferindo a propriedade):
+
+```cpp
+#include <memory>
+#include <iostream>
+
+void consume(std::unique_ptr<int> p) {
+  std::cout << *p << "\n";
+}
+
+int main() {
+  auto p = std::make_unique<int>(42);
+  consume(std::move(p));
+}
+```
+
+Arrays com `unique_ptr`:
+
+```cpp
+#include <memory>
+
+int main() {
+  std::unique_ptr<int[]> arr(new int[10]);
+  arr[0] = 7;
+}
+```
+
+Quando usar: padrão para representar propriedade única.
+
+### Shared pointer
+
+```cpp
+#include <memory>
+#include <iostream>
+
+int main() {
+  auto sp1 = std::make_shared<std::string>("oi");
+  auto sp2 = sp1; // contagem ++
+  std::cout << sp1.use_count() << "\n";
+}
+```
+
+Tem overhead; use quando a vida realmente precisa ser compartilhada.
+
+Cuidado com ciclos (parent/child) que impedem destruição:
+
+```cpp
+#include <memory>
+
+struct B;
+struct A { std::shared_ptr<B> b; };
+struct B { std::shared_ptr<A> a; };
+
+int main() {
+  auto a = std::make_shared<A>();
+  auto b = std::make_shared<B>();
+  a->b = b; b->a = a; // ciclo: nenhum é destruído
+}
+```
+
+### Weak pointer
+
+Use para observar um `shared_ptr` sem manter o objeto vivo. Ajuda a quebrar
+ciclos.
+
+```cpp
+#include <memory>
+#include <iostream>
+
+struct B;
+struct A { std::weak_ptr<B> b; };
+struct B { std::shared_ptr<A> a; };
+
+int main() {
+  auto a = std::make_shared<A>();
+  auto b = std::make_shared<B>();
+  a->b = b; b->a = a; // sem ciclo forte
+
+  if (auto locked = a->b.lock()) {
+    std::cout << "ok\n";
+  }
+}
+```
+
+## Guia rápido de escolha
+
+* Prefira containers (`std::vector`, `std::string`) e objetos em escopo.
+* Para propriedade única: `std::unique_ptr`.
+* Para vida realmente compartilhada: `std::shared_ptr`.
+* Para observar sem estender a vida e evitar ciclos: `std::weak_ptr`.
+* Use referências ou ponteiros crus somente para acesso sem propriedade
+  (não dar `delete`).
+
+## Comandos úteis
+
+* Compilar exemplos: `g++ -std=c++17 -O0 -g arquivo.cpp -o exec`
+* Valgrind: `valgrind --leak-check=full ./exec`

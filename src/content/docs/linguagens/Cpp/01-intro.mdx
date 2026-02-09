@@ -77,36 +77,60 @@ Em C++, a biblioteca padrão (entrada/saída, strings, containers, etc.) fica no
 
 Para não precisar escrever std:: toda vez, podemos usar a diretiva using. Com using namespace std;, todos os nomes do namespace std passam a ser usados sem prefixo no arquivo (ou no bloco) em que a diretiva aparece. Outra opção é ser mais seletivo: using std::cout; e using std::cin; trazem só cout e cin para o escopo, reduzindo o risco de conflitos. Em códigos pequenos ou em material introdutório isso deixa o programa mais curto e legível; em projetos maiores costuma-se evitar using namespace std no topo do arquivo para não “poluir” o escopo com todos os nomes da biblioteca padrão.
 
+## Variáveis e Tipos Primitivos
+
+C++ é uma linguagem fortemente tipada. As variáveis devem ser declaradas com um
+tipo específico.
 ```cpp
 #include <iostream>
 
-using std::cout;
-using std::cin;
-using std::endl;
-
 int main() {
-    int a, b;
-    cout << "Digite dois números: ";
-    cin >> a >> b;
-    cout << "Soma: " << (a + b) << endl;
+    int idade = 25;           // Inteiro
+    double altura = 1.75;     // Ponto flutuante (precisão dupla)
+    char letra = 'A';         // Caractere único
+    bool programador = true;  // Booleano (true/false)
+    
+    // std::string requer #include <string>, mas é fundamental conhecer
+    // (Veremos mais em STL)
+    
+    std::cout << "Idade: " << idade << std::endl;
+    std::cout << "Altura: " << altura << std::endl;
+    
     return 0;
 }
 ```
 
-Aqui, cout, cin e endl são usados sem o prefixo std:: porque foram trazidos ao escopo com using. O comportamento é o mesmo do código que usa std::cout, std::cin e std::endl explicitamente.
+### Inferência de Tipo (`auto`)
 
-Uma outra forma é com o `using namespace std;`, que traz todos os elementos disponíveis no namespace std, sem o prefixo.
+A partir do C++11, a palavra-chave `auto` permite que o compilador deduza o
+tipo da variável com base no valor de inicialização. Isso é útil para reduzir a
+verbosidade, especialmente com tipos complexos.
+
+```cpp
+auto x = 10;        // Deduzido como int
+auto y = 3.14;      // Deduzido como double
+auto z = "Texto";   // Deduzido como const char*
+
+// O tipo é fixo após a dedução. Não é tipagem dinâmica!
+// x = "Erro"; // Isso causaria erro de compilação
+```
+
+## Entrada e Saída
+
+A biblioteca `<iostream>` fornece `std::cin` para entrada e `std::cout` para
+saída.
 
 ```cpp
 #include <iostream>
 
-using namespace std;
-
 int main() {
-    int a, b;
-    cout << "Digite dois números: ";
-    cin >> a >> b;
-    cout << "Soma: " << (a + b) << endl;
+    int numero;
+    
+    std::cout << "Digite um número: ";
+    std::cin >> numero; // Lê o input do usuário e armazena em 'numero'
+    
+    std::cout << "Você digitou: " << numero << std::endl;
+    
     return 0;
 }
 ```
@@ -135,26 +159,43 @@ Alguns tipos básicos:
 | `bool`   | Verdadeiro ou falso          | `true`, `false`  |
 
 Exemplo de declaração e uso:
+=======
+## Estruturas de Controle
+
+As estruturas de controle em C++ são muito semelhantes às de C, Java e C#.
+
+### Condicionais
 
 ```cpp
-#include <iostream>
+int x = 10;
 
-using namespace std;
-
-int main() {
-    int idade = 20;
-    double altura = 1.75;
-
-    cout << "Idade: " << idade << endl;
-    cout << "Altura: " << altura << endl;
-
-    return 0;
+if (x > 0) {
+    std::cout << "Positivo";
+} else if (x < 0) {
+    std::cout << "Negativo";
+} else {
+    std::cout << "Zero";
 }
 ```
 
-Aqui, **variáveis** guardam valores e **`cout`** os exibe. Podemos encadear várias saídas com `<<`.
+### Laços de Repetição
 
-Para **ler** dados digitados pelo usuário, usamos **`cin`** com o operador `>>`:
+```cpp
+// Loop For
+for (int i = 0; i < 5; i++) {
+    std::cout << i << " ";
+}
+// Saída: 0 1 2 3 4
+
+// Loop While
+int contador = 0;
+while (contador < 3) {
+    std::cout << "Contando: " << contador << "\n";
+    contador++;
+}
+```
+
+## Funções
 
 ```cpp
 #include <iostream>
@@ -186,3 +227,17 @@ Resumo do fluxo: escrever, compilar, executar:
 
 Se houver erro de sintaxe, o compilador mostra mensagens na linha em que detectou o problema. Corrija o código e compile de novo.
 
+// Declaração da função (protótipo)
+int somar(int a, int b);
+
+int main() {
+    int resultado = somar(5, 3);
+    std::cout << "A soma é: " << resultado << std::endl;
+    return 0;
+}
+
+// Definição da função
+int somar(int a, int b) {
+    return a + b;
+}
+```
