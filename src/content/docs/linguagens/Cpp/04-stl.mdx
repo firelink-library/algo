@@ -1,17 +1,20 @@
 ---
 title: A STL
+description: Introdução prática à Standard Template Library do C++, cobrindo templates, containers essenciais e algoritmos.
 sidebar:
   order: 4
 slug: cpp-stl
 ---
 
-Este artigo mostra por que templates existem, como usá‑los no básico e como a
-STL (containers + algoritmos) resolve problemas comuns. Itens marcados como
-"Novo" requerem suporte de padrão mais recente (C++20/C++23).
+A STL (Standard Template Library) é uma das maiores forças do C++. Ela
+fornece containers eficientes, algoritmos genéricos e iteradores que
+permitem escrever código conciso e reutilizável. Este artigo mostra como
+usar templates no básico e como a STL resolve problemas comuns do dia a dia.
 
 ## Motivação: sem templates
 
-Problema clássico: duas funções com a mesma lógica para tipos diferentes.
+Sem templates, precisaríamos escrever funções separadas para cada tipo,
+resultando em duplicação de código e dificuldade de manutenção.
 
 ```cpp
 int dobrar(int x) { return x * 2; }
@@ -23,27 +26,27 @@ int main() {
 }
 ```
 
-Manutenção pior, duplicação de código. Em C++, evitamos isso com templates.
-
 ## Entendendo templates
 
-### Funções template
+Templates permitem escrever código genérico que funciona com qualquer tipo.
+O compilador gera automaticamente as versões específicas necessárias.
 
 ```cpp
 template<typename T>
 T dobrar(T x) { return x * 2; }
 
 int main() {
-  std::cout << dobrar(2) << "\n";
-  std::cout << dobrar(2.5) << "\n";
+  std::cout << dobrar(2) << "\n";      // deduz int
+  std::cout << dobrar(2.5) << "\n";    // deduz double
 }
 ```
 
-- Dedução de tipo funciona na maioria dos casos.
-- Chamada explícita: `dobrar<int>(2)`.
-- `typename` e `class` são equivalentes em templates simples.
+A dedução de tipo funciona automaticamente na maioria dos casos, mas você
+pode especificar explicitamente com `dobrar<int>(2)` quando necessário.
+As palavras-chave `typename` e `class` são equivalentes em templates
+simples.
 
-### Classes template (rápido)
+Classes também podem ser templates:
 
 ```cpp
 template<typename T>
@@ -56,22 +59,17 @@ int main() {
 }
 ```
 
-Compilação:
-- `g++ -std=c++17 -O0 -g arquivo.cpp -o exec`
-
 ## A STL na prática
 
-A STL é um conjunto de templates prontos: containers, iteradores e algoritmos.
+A STL oferece três componentes principais: containers para armazenar dados,
+iteradores para acessar esses dados, e algoritmos para manipulá-los.
 
-### Containers essenciais
+Os containers essenciais incluem `std::vector` para arranjos dinâmicos,
+`std::string` para texto, e `std::unordered_map` para dicionários de
+chave-valor baseados em hash.
 
-- `std::vector<T>`: arranjo dinâmico.
-- `std::string`: texto.
-- `std::unordered_map<K,V>`: dicionário hash (chave/valor).
-
-### Iteração e algoritmos
-
-Prefira algoritmos a loops manuais quando existir equivalente.
+Prefira algoritmos da STL a loops manuais quando existir equivalente. Eles
+são otimizados e expressam a intenção claramente:
 
 ```cpp
 #include <vector>
@@ -87,7 +85,7 @@ int main() {
 }
 ```
 
-### Map simples
+O `unordered_map` funciona como um dicionário eficiente:
 
 ```cpp
 #include <unordered_map>
@@ -101,11 +99,10 @@ int main() {
 }
 ```
 
-## Novidades
+## Novidades modernas
 
-### C++17
-
-- `std::string_view`: visão leve de string, evita cópia.
+O C++17 introduziu `std::string_view`, uma visão leve sobre strings que
+evita cópias desnecessárias:
 
 ```cpp
 #include <string_view>
@@ -114,9 +111,8 @@ int main() {
 void print(std::string_view s) { std::cout << s << "\n"; }
 ```
 
-### C++20 (Novo)
-
-- `<ranges>`: pipelines legíveis com views e algoritmos.
+O C++20 trouxe a biblioteca `<ranges>`, permitindo pipelines elegantes com
+views e algoritmos:
 
 ```cpp
 #include <ranges>
@@ -134,7 +130,8 @@ int main() {
 }
 ```
 
-- `std::span`: visão sobre dados contíguos.
+Também em C++20, `std::span` oferece uma visão segura sobre dados contíguos
+sem assumir propriedade:
 
 ```cpp
 #include <span>
@@ -145,22 +142,20 @@ void soma(std::span<const int> xs) {
 }
 ```
 
-- `unordered_map::contains`: checar se chave existe.
+O método `contains` em unordered_map simplifica verificações:
 
 ```cpp
 #include <unordered_map>
 
 bool tem(const std::unordered_map<int,int>& m, int k) {
-  return m.contains(k);
+  return m.contains(k); // C++20
 }
 ```
 
-### C++23 (Novo)
-
-- `std::ranges::to`: coletar resultados de pipelines (suporte varia).
+O C++23 adicionou `std::ranges::to` para coletar resultados de pipelines
+diretamente em containers:
 
 ```cpp
-// Pode requerer lib/compilador recente
 #include <ranges>
 #include <vector>
 
@@ -171,15 +166,16 @@ int main() {
 }
 ```
 
-## Boas práticas e pegadinhas
+## Boas práticas
 
-- Inclua os headers corretos: `<algorithm>`, `<numeric>`, `<ranges>`, etc.
-- Inserções/remoções podem invalidar iteradores.
-- Use `auto` para tipos verbosos; `auto&` ao iterar se precisa modificar.
-- Combine STL com smart pointers quando houver polimorfismo.
+Sempre inclua os headers corretos para cada componente da STL que utilizar.
+Tenha cuidado pois inserções e remoções em containers podem invalidar
+iteradores existentes. Use `auto` para simplificar tipos verbosos, e
+`auto&` quando precisar modificar elementos durante iteração. A STL se
+integra perfeitamente com smart pointers quando você precisa de
+polimorfismo em containers.
 
-## Comandos
-
-- C++17: `g++ -std=c++17 -O0 -g arquivo.cpp -o exec`
-- C++20: `g++ -std=c++20 -O0 -g arquivo.cpp -o exec`
-- C++23: `g++ -std=c++23 -O0 -g arquivo.cpp -o exec`
+Para compilar código com diferentes padrões:
+- C++17: `g++ -std=c++17 arquivo.cpp -o exec`
+- C++20: `g++ -std=c++20 arquivo.cpp -o exec`
+- C++23: `g++ -std=c++23 arquivo.cpp -o exec`
