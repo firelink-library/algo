@@ -1,22 +1,21 @@
 ---
 title: Orientação a objetos
+description: Como implementar POO em C++ com foco em exemplos práticos e boas práticas modernas.
 sidebar:
   order: 3
 slug: cpp-poo
 ---
 
-Assim como a seção de introdução à linguagem, orientação a objetos já deve ser
-algo que vocês dominam razoavelmente bem. Sendo assim, vou focar em apenas
-mostrar como se usam esses conceitos em C++.
+Assim como na seção de introdução à linguagem, orientação a objetos já deve ser
+algo que vocês dominam razoavelmente bem. Sendo assim, vou focar em mostrar
+como esses conceitos se manifestam em C++.
 
 ## Classes e Structs
 
-Em C++, a única diferença entre `class` e `struct` é o acesso padrão:
-- `class`: membros são `private` por padrão.
-- `struct`: membros são `public` por padrão.
-
-No dia a dia, usamos `struct` para pacotes de dados simples e `class` para
-objetos com lógica e encapsulamento.
+Em C++, a única diferença entre `class` e `struct` é o acesso padrão dos
+membros. Em uma `class`, todos os membros são `private` por padrão, enquanto
+em um `struct` são `public`. Na prática, usamos `struct` para pacotes simples
+de dados e `class` quando precisamos de encapsulamento e lógica.
 
 ```cpp
 class Pessoa {
@@ -37,13 +36,13 @@ public:
 
 ## Construtores e Destrutores
 
-C++ moderno favorece a **lista de inicialização** no construtor. Ela é mais
-eficiente pois evita a construção padrão seguida de atribuição.
+C++ moderno favorece a lista de inicialização no construtor por ser mais
+eficiente. Ela evita a construção padrão seguida de atribuição, inicializando
+diretamente os membros.
 
-- `explicit`: Use em construtores de um único parâmetro para evitar conversões
-  implícitas indesejadas.
-- `~Classe()`: O destrutor. Graças ao RAII, ele é chamado automaticamente ao
-  fim do escopo do objeto.
+Use `explicit` em construtores de um único parâmetro para impedir conversões
+implícitas indesejadas. O destrutor, marcado como `~Classe()`, é chamado
+automaticamente quando o objeto sai de escopo graças ao princípio RAII.
 
 ```cpp
 class Recurso {
@@ -55,9 +54,9 @@ public:
 
 ## A Regra do Zero
 
-A "Regra do Zero" diz que você não deve escrever destrutores, construtores de
-cópia ou operadores de atribuição se puder usar tipos da biblioteca padrão
-(como `std::vector` ou `std::string`) que já fazem isso por você.
+A Regra do Zero estabelece que você não deve escrever destrutores, construtores
+de cópia ou operadores de atribuição manualmente se puder compor sua classe
+com tipos da biblioteca padrão que já gerenciam esses aspectos corretamente.
 
 ```cpp
 struct Registro {
@@ -69,10 +68,14 @@ struct Registro {
 
 ## Herança e Polimorfismo
 
-Para usar polimorfismo em C++, você precisa de três coisas:
-1. Métodos marcados como `virtual`.
-2. Um **destrutor virtual** na classe base.
-3. Uso de ponteiros (preferencialmente smart pointers) ou referências.
+Para usar polimorfismo em C++, você precisa marcar métodos como `virtual`,
+sempre definir um destrutor virtual na classe base, e acessar objetos
+através de ponteiros ou referências.
+
+O destrutor virtual é essencial para evitar vazamentos quando deletamos um
+objeto derivado através de um ponteiro para a classe base. A palavra-chave
+`override` garante que você está realmente sobrescrevendo um método virtual
+da classe base, gerando erro de compilação se não for o caso.
 
 ```cpp
 class Forma {
@@ -87,7 +90,6 @@ private:
   double lado;
 public:
   Quadrado(double l) : lado(l) {}
-  // override: garante que você está realmente sobrescrevendo algo
   double area() const override { return lado * lado; }
 };
 ```
@@ -95,11 +97,9 @@ public:
 ## O Problema do Slicing
 
 Se você passar um objeto por valor em uma hierarquia de classes, ocorre o
-"slicing" (fatiamento): a parte específica da classe derivada é "cortada" e
-apenas a base é copiada.
-
-**Evite isso:** Sempre passe objetos polimórficos por referência (`Base&`)
-ou ponteiro (`std::unique_ptr<Base>`).
+slicing (fatiamento): a parte específica da classe derivada é descartada e
+apenas a porção da classe base é copiada. Para evitar isso, sempre passe
+objetos polimórficos por referência (`Base&`) ou usando smart pointers.
 
 ```cpp
 void imprimirArea(const Forma& f) { // Correto: usa referência
@@ -114,7 +114,10 @@ int main() {
 
 ## Polimorfismo com Smart Pointers
 
-Esta é a forma mais comum de gerenciar coleções de objetos heterogêneos:
+A forma mais comum e segura de gerenciar coleções de objetos heterogêneos é
+usando `std::vector` combinado com `std::unique_ptr`. Isso permite armazenar
+diferentes tipos derivados em um mesmo container com gerenciamento automático
+de memória.
 
 ```cpp
 #include <vector>
@@ -131,12 +134,13 @@ int main() {
 }
 ```
 
-## Resumo de boas práticas
+## Boas práticas
 
-1. Use **listas de inicialização** em construtores.
-2. Use `explicit` para construtores de um argumento.
-3. Use `override` em métodos sobrescritos.
-4. Sempre defina um **destrutor virtual** em classes que servem de base.
-5. Prefira composição à herança quando possível.
-6. Nunca esqueça: polimorfismo exige ponteiros ou referências para evitar
-   slicing.
+Ao escrever classes em C++, prefira sempre usar listas de inicialização nos
+construtores e marque construtores de um argumento como `explicit`. Quando
+sobrescrever métodos virtuais, use `override` para garantir a correção.
+
+Sempre defina um destrutor virtual em classes que servem de base para outras.
+Prefira composição em vez de herança quando possível, e nunca esqueça que
+polimorfismo só funciona corretamente quando você usa ponteiros ou
+referências, evitando assim o problema do slicing.
