@@ -229,13 +229,19 @@ ou exceções. O objeto é sempre destruído quando o ponteiro sai de escopo.
 ## Ponteiros inteligentes
 
 A biblioteca `<memory>` oferece três tipos de smart pointers que gerenciam
-automaticamente a vida dos objetos, eliminando a necessidade de chamadas
-explícitas a `delete`.
+automaticamente a vida dos objetos. Eles eliminam a necessidade de chamadas
+explícitas a `delete` e previnem os erros mais comuns de gerenciamento de
+memória.
+
+### unique_ptr
 
 O `std::unique_ptr` representa propriedade exclusiva sobre um objeto. Ele
 é leve, não adiciona overhead em comparação com ponteiros crus, e não pode
-ser copiado, apenas movido. Sempre que possível, prefira criar unique_ptr
-usando `std::make_unique`.
+ser copiado, apenas movido. Quando o unique_ptr sai de escopo, o objeto
+apontado é automaticamente destruído.
+
+Sempre que possível, crie unique_ptr usando `std::make_unique` em vez de
+chamar `new` diretamente. Isso é mais seguro e eficiente:
 
 ```cpp
 #include <memory>
@@ -248,8 +254,11 @@ int main() {
 }
 ```
 
-Quando precisamos transferir a propriedade para uma função, usamos
-`std::move`:
+A semântica de movimento é fundamental aqui. Quando transferimos um
+unique_ptr para outra variável ou função, a propriedade é movida, não
+copiada. O ponteiro original fica vazio (nullptr) após a operação.
+
+Para transferir propriedade para uma função:
 
 ```cpp
 #include <memory>
@@ -265,8 +274,9 @@ int main() {
 }
 ```
 
-Para arrays, o unique_ptr possui uma especialização que gerencia a
-memória corretamente:
+Para arrays alocados dinamicamente, o unique_ptr possui uma
+especialização que gerencia a memória corretamente, chamando `delete[]`
+automaticamente:
 
 ```cpp
 #include <memory>
@@ -278,10 +288,16 @@ int main() {
 }
 ```
 
+Use unique_ptr como padrão sempre que precisar de propriedade única de um
+objeto no heap. Ele é eficiente, seguro e torna explícito que há apenas
+um dono do recurso.
+
+### shared_ptr
+
 O `std::shared_ptr` implementa propriedade compartilhada através de
-contagem de referências. Cada cópia do shared_ptr incrementa um contador,
-e cada destruição decrementa. Quando o contador chega a zero, o objeto é
-destruído.
+contagem de referências. Cada cópia do shared_ptr incrementa um contador
+atômico, e cada destruição decrementa. Quando o contador chega a zero, o
+objeto é destruído automaticamente.
 
 ```cpp
 #include <memory>
@@ -291,89 +307,121 @@ int main() {
   auto sp1 = std::make_shared<std::string>("oi");
   auto sp2 = sp1; // contagem incrementada para 2
   std::cout << sp1.use_count() << "\n"; // imprime 2
+  // Quando sp1 e sp2 saírem de escopo, o objeto será destruído
 }
 ```
 
-Shared pointers têm overhead de desempenho devido à contagem de
+Shared pointers têm overhead significativo devido à contagem de
 referências thread-safe. Use apenas quando a vida do objeto realmente
-precisa ser compartilhada entre múltiplos proprietários.
+precisa ser compartilhada entre múltiplos proprietários que não têm uma
+relação clara de pai-filho.
 
-Um problema com shared_ptr é a possibilidade de ciclos de referência,
-onde dois objetos se referenciam mutuamente, impedindo que ambos sejam
-destruídos:
-
-```cpp
-#include <memory>
-
-struct B;
-struct A { std::shared_ptr<B> b; };
-struct B { std::shared_ptr<A> a; };
-
-int main() {
-  auto a = std::make_shared<A>();
-  auto b = std::make_shared<B>();
-  a->b = b;
-  b->a = a; // ciclo criado: nenhum objeto será destruído
-}
-```
-
-Para resolver este problema, usamos `std::weak_ptr`, que funciona como um
-observador que não mantém o objeto vivo:
+Um problema sério com shared_ptr é a possibilidade de ciclos de
+referência. Quando dois objetos se referenciam mutuamente via shared_ptr,
+cada um mantém o outro vivo, impedindo que ambos sejam destruídos mesmo
+quando nenhum código externo os referencia mais:
 
 ```cpp
 #include <memory>
 #include <iostream>
 
 struct B;
-struct A { std::weak_ptr<B> b; }; // weak em vez de shared
-struct B { std::shared_ptr<A> a; };
+struct A { 
+  std::shared_ptr<B> b; 
+  ~A() { std::cout << "A destruído\n"; }
+};
+struct B { 
+  std::shared_ptr<A> a; 
+  ~B() { std::cout << "B destruído\n"; }
+};
 
 int main() {
   auto a = std::make_shared<A>();
   auto b = std::make_shared<B>();
   a->b = b;
-  b->a = a; // sem ciclo forte: ambos serão destruídos
+  b->a = a; // ciclo criado
+  // Nenhum destrutor será chamado - vazamento de memória!
+}
+```
 
+### weak_ptr
+
+Para resolver o problema de ciclos em shared_ptr, usamos `std::weak_ptr`,
+que funciona como um observador que não mantém o objeto vivo. Um weak_ptr
+não incrementa o contador de referências, permitindo que o objeto seja
+destruído normalmente.
+
+```cpp
+#include <memory>
+#include <iostream>
+
+struct B;
+struct A { 
+  std::weak_ptr<B> b; // weak em vez de shared
+  ~A() { std::cout << "A destruído\n"; }
+};
+struct B { 
+  std::shared_ptr<A> a; 
+  ~B() { std::cout << "B destruído\n"; }
+};
+
+int main() {
+  auto a = std::make_shared<A>();
+  auto b = std::make_shared<B>();
+  a->b = b;
+  b->a = a; // agora sem ciclo forte
+  // Ambos serão destruídos corretamente
+
+  // Para usar o weak_ptr, precisamos converter para shared_ptr
   if (auto locked = a->b.lock()) {
-    std::cout << "Ainda vivo, pode usar\n";
+    std::cout << "B ainda existe, pode usar\n";
+  } else {
+    std::cout << "B já foi destruído\n";
   }
 }
 ```
 
-O método `lock()` converte o weak_ptr em um shared_ptr temporário se o
-objeto ainda existir, ou retorna nullptr se já foi destruído.
+O método `lock()` tenta converter o weak_ptr em um shared_ptr. Se o
+objeto ainda existir, retorna um shared_ptr válido e incrementa o contador
+temporariamente. Se o objeto já foi destruído, retorna nullptr. Sempre
+verifique o resultado de `lock()` antes de usar.
 
-## Guia rápido de escolha
+Use weak_ptr quando precisar observar um objeto gerenciado por shared_ptr
+sem afetar sua vida útil, ou quando precisar quebrar ciclos de referência
+em estruturas de dados complexas.
 
-A escolha da ferramenta de gerenciamento de memória depende do padrão de
-propriedade que seu código precisa expressar.
+## Dicas e comandos úteis
 
-Sempre que possível, prefira containers da biblioteca padrão como
+Ao trabalhar com gerenciamento de memória em C++, siga estas diretrizes
+práticas.
+
+**Preferência por containers e objetos locais:**
+Sempre que possível, use containers da biblioteca padrão como
 `std::vector` e `std::string`, ou simplesmente objetos locais na pilha.
 Estas opções são seguras, eficientes e eliminam preocupações com
 gerenciamento manual.
 
-Quando você precisa expressar propriedade única de um objeto no heap, o
-`std::unique_ptr` é a escolha padrão. Ele é eficiente, seguro e torna
-explícito que há apenas um dono do recurso.
-
-Para situações onde múltiplas partes do código precisam compartilhar a
-propriedade de um objeto, use `std::shared_ptr`. Esteja ciente do overhead
-e dos riscos de ciclos de referência.
-
-Quando você precisa observar um objeto gerenciado por shared_ptr sem
-afetar sua vida útil, ou quando precisa quebrar ciclos de referência,
-o `std::weak_ptr` é a ferramenta apropriada.
-
+**Ponteiros crus com cautela:**
 Ponteiros crus e referências ainda têm seu lugar, mas devem ser usados
 apenas para acesso temporário sem assumir propriedade. Nunca chame `delete`
 manualmente em um ponteiro cru quando alternativas modernas estão
 disponíveis.
 
-## Comandos úteis
+**Compilação com símbolos de debug:**
+Para compilar exemplos com informações de debug, útil para ferramentas como
+Valgrind:
 
-Para compilar exemplos com símbolos de debug, útil para ferramentas como
-Valgrind: `g++ -std=c++17 -O0 -g arquivo.cpp -o exec`
+```bash
+g++ -std=c++17 -O0 -g arquivo.cpp -o exec
+```
 
-Para detectar vazamentos de memória com Valgrind:
-`valgrind --leak-check=full ./exec`
+**Detecção de vazamentos com Valgrind:**
+Para verificar se seu programa tem vazamentos de memória:
+
+```bash
+valgrind --leak-check=full ./exec
+```
+
+O relatório indicará vazamentos com mensagens como `definitely lost` ou
+`possibly lost`, apontando exatamente onde a memória foi alocada e não
+liberada.
