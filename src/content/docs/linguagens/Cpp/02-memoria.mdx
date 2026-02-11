@@ -8,6 +8,9 @@ slug: cpp-memoria
 
 import { Image } from 'astro:assets';
 import vonNeumann from '../../../../assets/linguagens/cpp/von_neumann.jpg';
+import hierarquiaMemoria from '../../../../assets/linguagens/cpp/hierarquia_memoria.jpg';
+import cpuCache from '../../../../assets/linguagens/cpp/cpu_cache.gif';
+import memoriaProcesso from '../../../../assets/linguagens/cpp/memoria_processo.jpg';
 
 Você já parou para pensar no que diferencia as linguagens de alto nível das
 linguagens de baixo nível, as chamadas linguagens de sistema? Talvez você já
@@ -22,9 +25,9 @@ memória. Para isso, vou voltar um pouco no tempo.
 
 A arquitetura de von Neumann, proposta pelo matemático John von Neumann em
 1945, revolucionou a computação ao introduzir um conceito simples mas
-poderoso: instruções e dados devem ser armazenados na mesma memória. Antes
-disso, programas eram frequentemente hardcoded ou configurados manualmente
-através de chaves e cabos.
+poderoso: instruções e dados devem ser armazenados na memória do dispositivo.
+Antes disso, os computadores eram máquinas operadas de forma quase completamente
+manual através de painéis de contato.
 
 <center>
   <Image
@@ -42,46 +45,111 @@ o programa quanto para os dados, e é endereçada diretamente pela CPU.
 Dispositivos de entrada e saída se comunicam com o sistema através de
 barramentos.
 
-Uma consequência fundamental desta arquitetura é que programa e dados
-compartilham o mesmo espaço de memória. As instruções são armazenadas como
-números na memória, e ponteiros nada mais são do que endereços que
-referenciam dados. Os conceitos de stack e heap não são definidos pelo
-hardware da CPU, mas sim pelo sistema operacional e pela ABI
-(Application Binary Interface).
+Essa quebra de paradigma se mantem até hoje e informa fortemente qualquer
+discussão que possamos ter sobre gerenciamento de memória em computadores. Segue
+que a memória, para os computadores, é fundamental tanto para armazenar
+instruções quanto variáveis.
 
-Esta visão ajuda a entender por que em C++ falamos frequentemente em
-endereços de memória, ponteiros, frames de stack e objetos alocados no
-heap. O controle direto sobre esses elementos é o que caracteriza uma
-linguagem de sistema.
+Outra informação que vai informar nossa discussão sobre gerenciamento de memória
+em C++ é: nem toda memória é igual.
 
 ## Hierarquia de memória
 
-Nem toda memória é igual. Se você já notou que seu computador tem memória
-RAM e um disco rígido, talvez se pergunte por que precisamos de ambos. A
-resposta está na hierarquia de memória, um conceito fundamental em
-arquitetura de computadores.
+Nem toda memória é igual. Se essa afirmação não fosse verdade, você não
+precisaria comprar memória RAM **e** um SSD para o seu sistema. Seria um **ou**
+outro.
 
-A memória do computador é organizada em níveis que oferecem diferentes
-compromissos entre velocidade, capacidade e custo. Os registradores da CPU
-são os mais rápidos, mas existem em quantidade muito limitada, tipicamente
-apenas algumas dezenas. O cache, dividido em níveis L1, L2 e às vezes L3,
-oferece velocidade intermediária com capacidade maior, variando de
-kilobytes a megabytes.
+Mesmo na época em que os computadores não caberiam na sala de estar dos
+apartamentos **studio** supervalorizados de São Paulo já existia o conceito de
+hierarquia de memória. Se você olhar novamente a imagem acima, da arquitetura de
+von Neumann, vai notar que há *registradores* e uma *unidade de memória*
+separada. Por quê? Não seria mais fácil ter toda a memória completamente
+unificada?
 
-A memória RAM, ou memória principal, é onde seus programas residem durante
-a execução. Ela é significativamente mais lenta que o cache, mas oferece
-gigabytes de capacidade. Finalmente, o armazenamento secundário, como SSDs
-e discos rígidos, oferece capacidade massiva mas com latência muito maior.
+A resposta é simples: **memória rápida é cara**.
 
-Quando você escreve um programa em C++, está trabalhando principalmente
-com a memória RAM. Entender esta hierarquia é crucial porque o desempenho
-do seu programa depende muito de como você acessa a memória. Acessos
-sequenciais e previsíveis são muito mais eficientes que acessos aleatórios.
+<center>
+  <Image
+    src={hierarquiaMemoria}
+    alt="Hierarquia de memória"
+    style={{ height: 'auto' }}
+  />
+</center>
+<p><center>Memória mais rápida é cara, portanto escassa. Memória barata é mais
+  disponível, mas tem menos performance.</center></p>
 
-## Stack vs heap
+Um computador moderno tem diversos níveis de memória disponíveis:
 
-Dentro da memória RAM disponível para seu programa, existem duas regiões
-principais onde seus dados podem residir: a pilha (stack) e o heap.
+* A CPU tem à sua disposição *bancos de registradores* de alta performance
+(**AX, BX, PC, etc**). Essa é a memória mais próxima do processamento e também a
+mais rápida. Em contrapartida, ela é mais cara e, portanto, de menor quantidade.
+* Os cache L1 e L2 compõe os dois níveis de acesso rápido à variáveis para **um
+  núcleo** da CPU.
+* O cache L3 é um cache unificado para **todos os núcleos** de uma CPU. Na
+maioria dos casos, ele serve para diminuir o tempo necessário para operações de
+*coerência de cache*.
+* A memória RAM compõe a memória principal do sistema. Sempre que ela é
+acessada, há uma perda de performance significativa com relação ao cache.
+* O disco rígido é onde fica o armazenamento de longo prazo do computador. A sua
+  performance é ordens de grandeza pior que até mesmo a memória RAM.
+
+<center>
+  <Image
+    src={cpuCache}
+    alt="CPU cache"
+    style={{ height: 'auto' }}
+  />
+</center>
+<p><center>Os níveis de cache de uma CPU típica. Esse diagrama está altamente
+  simplificado.</center></p>
+
+Por quê estou falando disso? Porque todos esses tipos de memória geram um
+problema: gerenciamento de memória. A boa notícia é que você, programador, não
+precisa se preocupar com o gerenciamento de memória do seu sistema. Quem
+precisa? Bom...
+
+## O sistema operacional
+
+O sistema operacional gerencia a memória através de tabelas de páginas, que
+são estruturas de dados que mapeiam endereços virtuais para endereços físicos
+da memória RAM. Cada processo possui seu próprio espaço de endereçamento virtual,
+isolado dos outros processos. Quando seu programa acessa um endereço de memória,
+o hardware de gerenciamento de memória (MMU) consulta essas tabelas para
+encontrar onde os dados realmente residem na memória física.
+
+Um processo em execução organiza sua memória virtual em várias regiões
+distintas. A região de instruções contém o código do programa compilado.
+A região de dados estáticos armazena variáveis globais e estáticas que existem
+durante toda a execução. O stack cresce de cima para baixo, armazenando
+variáveis locais e informações de chamadas de função. O heap cresce de baixo
+para cima, fornecendo espaço para alocação dinâmica. Entre o heap e o stack
+existe um espaço livre que pode ser utilizado por ambos, até que se encontrem.
+
+<center>
+  <Image
+    src={memoriaProcesso}
+    alt="Memória de um processo"
+    style={{ height: 'auto' }}
+  />
+</center>
+<p><center>Os elementos de memória de um processo no sistema 
+  operacional.</center></p>
+
+Quando um processo precisa de mais memória, o comportamento difere entre
+stack e heap. O stack possui um tamanho fixo definido na criação do processo,
+tipicamente entre 1 e 8 megabytes. Se uma função tentar alocar mais do que
+isso, ocorre um estouro de pilha (stack overflow) que geralmente termina o
+programa imediatamente. Já o heap pode crescer através de chamadas de sistema
+como `brk` ou `mmap`, solicitando mais páginas de memória ao sistema
+operacional. Essa flexibilidade permite alocar grandes quantidades de memória,
+mas com o custo de maior overhead e a responsabilidade de gerenciamento manual.
+
+O que isso significa para você? Significa que você precisa entender que algumas
+vezes você (programador, portanto **dono** do processo de um programa) vai
+precisar se preocupar em *pedir* memória para o sistema. Vamos entender isso
+melhor?
+
+## Stack vs heap e alocação dinâmica
 
 A pilha é uma região de memória gerenciada automaticamente pelo compilador.
 Quando você declara uma variável local dentro de uma função, ela é
@@ -110,15 +178,6 @@ pilha (stack overflow). Além disso, a pilha não permite que objetos
 sobrevivam ao escopo onde foram criados, o que é necessário em muitos
 padrões de programação.
 
-## Pedindo memória para o sistema
-
-Quando seu programa precisa de mais memória no heap, ele faz uma requisição
-ao sistema operacional através de chamadas de sistema (syscalls). Em
-sistemas Unix-like, a syscall `brk` ou `mmap` é usada para expandir a
-região de memória do heap. O sistema operacional mantém estruturas de dados
-complexas para rastrear quais páginas de memória estão livres e quais
-estão alocadas.
-
 O alocador de memória padrão do C++ (geralmente implementado usando
 malloc/free por baixo) gerencia um pool de memória obtida do sistema.
 Quando você chama `new`, o alocador tenta encontrar um bloco livre
@@ -126,10 +185,9 @@ dentro deste pool. Se não houver memória suficiente, ele pede mais ao
 sistema operacional. Quando você chama `delete`, a memória é devolvida ao
 pool, mas não necessariamente ao sistema operacional imediatamente.
 
-Este gerenciamento tem overhead significativo. Cada alocação no heap
-requer buscar um bloco adequado, possivelmente dividir blocos maiores, e
-atualizar estruturas de metadados. Por isso, alocações frequentes e
-pequenas no heap são ineficientes e devem ser evitadas quando possível.
+Quando você usa o alocador, dizemos que está trabalhando com **alocação
+dinâmica**. Sempre que isso acontece, o resultado do processo de alocação é o
+endereço de um espaço de memória. Em outras palavras, um **ponteiro**.
 
 ## Ponteiros clássicos
 
@@ -165,11 +223,21 @@ Os erros mais comuns com ponteiros crus incluem confundir `delete` com
 usar um ponteiro após liberar a memória (dangling pointer), e retornos
 precoces ou exceções que fazem o programa pular a chamada de `delete`.
 
-Felizmente, a maioria destes problemas desaparece quando adotamos o
-princípio RAII (Resource Acquisition Is Initialization) e usamos
-containers e smart pointers da biblioteca padrão.
+O que acontece quando um programa pula a chamada do `delete`?
 
 ## Vazamento de memória
+
+Faça um experimento agora:
+
+1. Abra o *gerenciador de tarefas* e veja quanto de memória o seu sistema está
+   atualmente utilizando. Anote esse valor;
+2. Abra o *Chrome* e note a variação de uso de memória. Pode abrir umas duas
+   abas e ver o quanto isso faz o uso de memória variar;
+3. Feche o *Chrome* e cheque novamente o uso de memória.
+
+A pergunta fundamental é: a quantidade de memória utilizada pelo sistema voltou
+ao valor anterior, observado em **1**? Não? Então você acabou de ver um
+**vazamento de memória**.
 
 Um vazamento de memória ocorre quando alocamos memória no heap mas
 esquecemos de liberá-la. Considere este exemplo problemático:
@@ -194,7 +262,13 @@ Se a função retornar prematuramente devido a `fail` ser true, a memória
 alocada nunca é liberada. Em um programa real, vazamentos como este
 acumulados ao longo do tempo podem esgotar a memória disponível.
 
-Podemos detectar vazamentos usando ferramentas como o Valgrind:
+Claro que você conseguiria detectar um erro tão elementar em alguns segundos,
+certo? Certo, mas talvez esse erro passe batido em um projeto com milhões de 
+linhas de código. Esse é o caso do *Chrome* (mais de **30 milhões de LoC**). Aí
+fica complicado, né?
+
+É por isso que existem ferramentas para te ajudar a detectar vazamento de
+memória. Uma delas é o `valgrind`. Para usá-la, execute:
 
 ```bash
 g++ -std=c++17 -O0 -g leak.cpp -o leak
@@ -225,6 +299,64 @@ int main() { f(true); }
 
 Com `std::unique_ptr`, não precisamos nos preocupar com caminhos de retorno
 ou exceções. O objeto é sempre destruído quando o ponteiro sai de escopo.
+
+Esse é um bom momento para que você, programador de *Python* ou amante de
+*Node*, faça a afirmação que deve estar na ponta da sua língua:
+
+> Eu **nunca** precisei me preocupar com isso enquanto trabalhava! Tá vendo? É por
+> isso que ninguém quer programar em C++.
+>
+> — Typescripto da silva
+
+O motivo disso é que essas linguagens usam **garbage collector**
+
+Um garbage collector é um mecanismo automático de gerenciamento de memória
+presente em linguagens como Java, Python, Go e C#. Em vez do programador
+chamar explicitamente funções para liberar memória, o GC monitora
+periodicamente quais objetos ainda estão sendo referenciados e quais
+podem ser liberados. Isso elimina uma classe inteira de bugs como vazamentos
+de memória e double free, tornando o desenvolvimento mais seguro e produtivo.
+
+O custo dessa conveniência é o impacto na performance. O GC precisa
+periodicamente pausar a execução do programa para analisar todas as
+referências de memória e limpar objetos não utilizados. Essas pausas,
+chamadas de "stop-the-world", podem causar latências imprevisíveis,
+especialmente em aplicações que exigem resposta em tempo real. Além disso,
+o overhead contínuo de rastreamento de referências consome ciclos de CPU
+que poderiam ser usados pela aplicação.
+
+Cada abordagem tem seu lugar. Linguagens com garbage collector são
+excelentes para desenvolvimento web, aplicações empresariais e
+prototipagem rápida, onde a produtividade do desenvolvedor e a segurança
+da memória são prioritárias. Linguagens de sistema como C++ são
+essenciais para sistemas operacionais, drivers, jogos, sistemas embarcados
+e aplicações de alta performance, onde o controle determinístico sobre
+a memória e a ausência de pausas imprevisíveis são críticos. O ecossistema
+de software moderno precisa de ambos os tipos de linguagem trabalhando
+em conjunto.
+
+Legal, mas então isso significa que o programador de linguagens de sistema está
+fadado a sofrer com os próprios erros de gerenciamento de memória, certo?
+
+Errado. É aí que entra o conceito de RAII.
+
+
+## RAII
+
+Trabalhar com ponteiros crus oferece controle total, mas exige disciplina
+rigorosa. Cada `new` precisa de um `new[]` ou `delete` correspondente,
+cada `new[]` precisa de um `delete[]`, e você deve garantir que nenhum
+caminho de execução escape dessas liberações. Em código complexo com múltiplos
+retornos, exceções e caminhos condicionais, isso se torna rapidamente
+impraticável e propenso a erros.
+
+A boa notícia é que C++ moderno oferece uma solução elegante. Em vez de
+gerenciar memória manualmente, podemos usar objetos que encapsulam ponteiros
+e gerenciam automaticamente sua vida útil. Quando esses objetos saem de
+escopo, eles liberam a memória automaticamente, garantindo que nenhum
+vazamento ocorra, independentemente de como a função termine. Essa abordagem,
+conhecida como RAII (Resource Acquisition Is Initialization), é o padrão
+moderno de gerenciamento de memória em C++.
 
 ## Ponteiros inteligentes
 
