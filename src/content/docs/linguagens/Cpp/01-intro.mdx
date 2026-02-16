@@ -5,11 +5,11 @@ sidebar:
 slug: cpp-intro
 ---
 
-Vamos começar a programar em C++! 💻
+## Vamos começar a programar em C++! 💻
 
 O foco é construir uma **base computacional**: entender o que é um programa,
 como ele é executado e como escrever os primeiros códigos. Não vamos nos
-preocupar com desempenho ou recursos avançados — apenas com o início da
+preocupar com desempenho ou recursos avançados, apenas com o início da
 programação.
 
 C++ é uma **linguagem compilada**, onde o código que você escreve (arquivo
@@ -17,7 +17,7 @@ fonte) é transformado por um **compilador** em um programa executável que o
 sistema operacional roda. Esse processo de compilação acontece antes da
 execução; depois de compilar, você roda o executável.
 
-Mas o que isso significa na prática?
+## Mas o que isso significa?
 
 Quando trabalhamos com uma linguagem compilada, temos algumas diferenças que
 devemos ter em mente. A primeira delas é que o código que escrevemos não pode
@@ -36,11 +36,7 @@ trabalhavam em tradutores automáticos (como o A-0), que deram base às ideias d
 compilação.
 
 O compilador lê o código fonte escrito em uma linguagem (como C++) e gera um
-programa equivalente em uma linguagem que o hardware — ou uma máquina virtual
-— consiga executar (geralmente código de máquina ou bytecode). Dessa forma, o
-compilador faz a ponte entre a linguagem que o programador usa e a linguagem
-que a máquina executa, permitindo que o mesmo código seja reutilizado em
-diferentes máquinas e que erros de sintaxe sejam detectados antes da execução.
+programa equivalente em uma linguagem que o hardware consiga executar (geralmente código de máquina ou bytecode). Dessa forma, o compilador faz a ponte entre a linguagem que o programador usa e a linguagem que a máquina executa, permitindo que o mesmo código seja reutilizado em diferentes máquinas e que erros de sintaxe sejam detectados antes da execução.
 
 Com isso em mente, vamos direto ao uso.
 
@@ -84,6 +80,10 @@ Recomendações por sistema operacional:
 
 :::
 
+> ` Calma lá! Vocês não falaram para usar o Visual Studio? `
+
+Boa colocação, o Visual Studio é uma ótima e poderosa ferramenta. Contudo, ela tem um curva de aprendizado um pouco maior, quando comparada com o CodeBlocks e também possui um tamanho muito maior (alguns GB, no momento que escrevemos este texto, em 2026). Portanto, nossa recomendação para iniciar, ficar com algo mais simples. Se tamanho e complexidade não são um problema, recomendo testar a ferramenta.
+
 ## O primeiro programa
 
 Todo programa C++ executável precisa de uma função chamada `main`: é por ela
@@ -108,7 +108,7 @@ O que aparece aí:
 - **`return 0;`** — indica que o programa terminou sem erro (convenção para o
   sistema operacional).
 
-Salve o código em um arquivo, por exemplo `ola.cpp`. No terminal, na pasta do
+Salve o código em um arquivo, por exemplo `ola.cpp`. Se você estiver no MacOS ou no Linux, no terminal, na pasta do
 arquivo:
 
 ```bash
@@ -119,6 +119,13 @@ g++ -o ola ola.cpp
 (O primeiro comando gera o executável `ola`; o segundo roda. No Windows, use
 `ola.exe` ou apenas `ola` dependendo do ambiente.)
 
+:::tip[Quem estiver utilizando o Code Blocks]
+
+Para quem estiver utilizando o CodeBlocks, verificar o processo de criar projetos no vídeo a seguir:
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/Hkpwf5UJSmo?si=ue9ySmqLr_o1oCT4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+:::
 
 Em C++, a biblioteca padrão (entrada/saída, strings, containers, etc.) fica no
 *namespace std*. O prefixo *std::* indica que o nome que vem em seguida
@@ -221,7 +228,7 @@ Mas calma! Vamos retomar esse conceito quando avançarmos mais com a linguagem!
 
 ## Estruturas de Controle
 
-As estruturas de controle em C++ são muito semelhantes às de C, Java e C#.
+As estruturas de controle em C++ são muito semelhantes às de C, Java e C#. Elas permitem que o nosso programa execute ou não trechos de código e determine como será a sua execução dado um conjunto de valores ou estados que nosso programa pode assumir. Além das estruturas de controle condicional, temos as estruturas de repetição. Elas permitem que um trecho do nosso programa possa ser repetido enquanto uma determinada condição for verdadeira.
 
 ### Condicionais
 
@@ -255,6 +262,10 @@ while (contador < 3) {
 ```
 
 ## Funções
+
+Funções são agrupamentos de código que podem ser reutilizados em diversos pontos do nosso programa. Além da reutilização, quando utilizamos funções, torna-se mais direto o processo de modularização do código, deixando trechos mais bem definidos e simples de trabalhar e modificar.
+
+Vamos analisar o exemplo abaixo. Este exemplo ainda não utiliza funções.
 
 ```cpp
 #include <iostream>
@@ -309,3 +320,9 @@ int somar(int a, int b) {
     return a + b;
 }
 ```
+
+O que aconteceu aqui, retiramos o comportamento de somar os dois números do programa principal e deixamos ele separado do nosso programa principal. Desta forma, ele pode ser utilizado em diversos pontos, além de ficar mais direto e simples alterar e corrigir esse comportamento se for necessário.
+
+> `Calma lá, vocês estão dizendo que mudar esse código simples vai ser um problema?`
+
+Aqui tem um ponto importante para analisarmos: muitos exemplos que vamos passar aqui tem uma característica de demonstrar algum comportamento. Para tornar mais simples o processo de compreender o que estamos apresentando, estes exemplos serão mais simples. Contudo, com o passar do tempo e do material, a sua complexidade será elevada. Neste momento, eles são simples de forma proposital, para demonstrar o conceito em sua forma mais básica beleza?
