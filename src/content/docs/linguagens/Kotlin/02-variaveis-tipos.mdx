@@ -1,0 +1,195 @@
+---
+sidebar:
+  order: 2
+slug: kotlin-variaveis-tipos
+title: "Variáveis e Tipos"
+---
+
+Kotlin é uma linguagem **fortemente tipada** — toda variável tem um tipo bem definido. Mas diferente do Java, você raramente precisa escrever esse tipo explicitamente porque o Kotlin consegue **inferir** a partir do valor atribuído.
+
+## val vs var
+
+A primeira decisão ao declarar uma variável é escolher entre `val` e `var`:
+
+```kotlin
+val nome = "Android"    // imutável — não pode ser reatribuída
+var contador = 0        // mutável — pode mudar de valor
+```
+
+- Use `val` sempre que puder. Imutabilidade evita bugs e deixa o código mais previsível.
+- Use `var` só quando realmente precisar alterar o valor.
+
+```kotlin
+val pi = 3.14159
+pi = 3.0  // ❌ erro de compilação — val não pode ser reatribuído
+
+var pontos = 0
+pontos = 10  // ✅ ok
+pontos += 5  // ✅ ok, agora pontos = 15
+```
+
+## Tipos Primitivos
+
+Kotlin tem os seguintes tipos numéricos e de texto:
+
+| Tipo | Tamanho | Exemplo |
+|------|---------|---------|
+| `Int` | 32 bits | `42` |
+| `Long` | 64 bits | `42L` |
+| `Double` | 64 bits | `3.14` |
+| `Float` | 32 bits | `3.14f` |
+| `Boolean` | — | `true` / `false` |
+| `Char` | 16 bits | `'A'` |
+| `String` | — | `"texto"` |
+
+```kotlin
+val idade: Int = 25
+val preco: Double = 49.90
+val ativo: Boolean = true
+val inicial: Char = 'K'
+val nome: String = "Kotlin"
+```
+
+Na maioria dos casos você pode omitir o tipo e deixar o Kotlin inferir:
+
+```kotlin
+val idade = 25          // inferido como Int
+val preco = 49.90       // inferido como Double
+val ativo = true        // inferido como Boolean
+```
+
+## Strings
+
+Strings em Kotlin têm alguns recursos extras muito úteis.
+
+### String Templates
+
+```kotlin
+val nome = "Maria"
+val idade = 28
+
+// interpolação com $
+println("Olá, $nome!")          // Olá, Maria!
+
+// expressão dentro de ${}
+println("Ano de nascimento: ${2024 - idade}")  // Ano de nascimento: 1996
+```
+
+### String Multiline
+
+```kotlin
+val mensagem = """
+    Olá, $nome!
+    Bem-vindo ao app.
+    Você tem $idade anos.
+""".trimIndent()
+```
+
+## Nullable Types
+
+Por padrão, variáveis em Kotlin **não aceitam null**. Para permitir null, você precisa marcar o tipo com `?`:
+
+```kotlin
+var nome: String = "Android"
+nome = null  // ❌ erro de compilação
+
+var apelido: String? = "Andy"
+apelido = null  // ✅ ok, o tipo permite null
+```
+
+Isso elimina o famigerado `NullPointerException` do Java — se o código compila, você não vai ter NPE em tempo de execução.
+
+### Acessando valores nullable
+
+```kotlin
+val apelido: String? = null
+
+// safe call: retorna null se apelido for null
+val tamanho = apelido?.length    // null
+
+// operador Elvis: valor padrão quando null
+val tam = apelido?.length ?: 0   // 0
+
+// non-null assertion: lança exceção se for null (use com cuidado)
+val tam2 = apelido!!.length      // ❌ lança NullPointerException
+```
+
+:::tip[Dica]
+No desenvolvimento Android você vai encontrar variáveis nullable o tempo todo — dados vindos de formulários, Intent, Bundle. O operador `?.` e o Elvis `?:` são seus melhores amigos.
+:::
+
+## Verificação e Conversão de Tipos
+
+### Operador `is`
+
+```kotlin
+val valor: Any = "Kotlin"
+
+if (valor is String) {
+    // dentro do if, o compilador já sabe que é String
+    println(valor.length)  // smart cast automático
+}
+```
+
+### Smart Cast
+
+Após um `is`, o Kotlin automaticamente converte o tipo — você não precisa fazer cast manual:
+
+```kotlin
+fun descrever(valor: Any): String {
+    return when (valor) {
+        is Int    -> "Número inteiro: $valor"
+        is String -> "Texto com ${valor.length} caracteres"
+        is Boolean -> if (valor) "verdadeiro" else "falso"
+        else      -> "tipo desconhecido"
+    }
+}
+```
+
+### Conversão Explícita
+
+Kotlin não faz conversão implícita entre tipos numéricos. Você precisa converter explicitamente:
+
+```kotlin
+val inteiro = 42
+val decimal = inteiro.toDouble()  // 42.0
+val texto = inteiro.toString()    // "42"
+
+val textoNumero = "123"
+val numero = textoNumero.toInt()  // 123
+val numeroSeguro = textoNumero.toIntOrNull()  // null se falhar
+```
+
+## lateinit e lazy
+
+Às vezes você precisa declarar uma variável sem inicializá-la imediatamente — comum em Android quando você precisa de uma View que ainda não foi criada.
+
+### `lateinit`
+
+```kotlin
+// lateinit: inicialização garantida depois, mas não agora
+lateinit var binding: ActivityMainBinding
+
+override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    binding = ActivityMainBinding.inflate(layoutInflater)
+    setContentView(binding.root)
+    // agora binding está inicializado e pode ser usado
+}
+```
+
+- Só funciona com `var`
+- Só para tipos que não são primitivos (não funciona com `Int`, `Double`, etc.)
+- Se acessar antes de inicializar, lança `UninitializedPropertyAccessException`
+
+### `lazy`
+
+```kotlin
+// lazy: calculado apenas quando acessado pela primeira vez
+val configuracoes: Configuracoes by lazy {
+    Configuracoes.carregar()  // só executa na primeira leitura
+}
+```
+
+- Funciona com `val`
+- Útil para inicializações custosas que você quer adiar

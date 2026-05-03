@@ -44,149 +44,12 @@ Kotlin traz algumas vantagens em relação ao Java no desenvolvimento Android:
 - **Coroutines**: forma elegante e eficiente de trabalhar com código assíncrono (chamadas de rede, banco de dados).
 - **Interoperabilidade**: você pode usar qualquer biblioteca Java existente dentro de um projeto Kotlin.
 
-## 3. Configurando o Ambiente
 
-### 3.1 Instalando o Android Studio
-
-O Android Studio é a IDE oficial para desenvolvimento Android. Baixe a versão mais recente no [site oficial](https://developer.android.com/studio?hl=pt-br).
-
-:::note[SDK Manager]
-Durante a instalação, o Android Studio vai pedir para instalar o Android SDK. Deixe as opções padrão marcadas — elas incluem o emulador Android (Android Virtual Device).
-:::
-
-Após a instalação, abra o Android Studio e siga o assistente de configuração. Ao final, você terá acesso ao **AVD Manager** para criar e iniciar emuladores.
-
-### 3.2 Criando seu Primeiro Projeto
-
-1. Abra o Android Studio e clique em **New Project**
-2. Na tela de seleção de template, selecione **Empty Views Activity**
-
-:::danger[Atenção: escolha o template certo!]
-O Android Studio tem **dois** templates parecidos — escolha o correto:
-
-| Template | Tecnologia | Como identificar |
-|----------|-----------|-----------------|
-| **Empty Activity** | Jetpack Compose | `MainActivity` herda de `ComponentActivity` e usa `setContent {}` |
-| **Empty Views Activity** ✅ | XML + Views | `MainActivity` herda de `AppCompatActivity` e usa `setContentView()` |
-
-Se você criou com **Empty Activity** (Compose), seu `MainActivity.kt` vai ter este formato:
-```kotlin
-// ❌ Este é o template Compose — NÃO é o que usaremos
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            MyApplicationTheme { ... }
-        }
-    }
-}
-```
-Nesse caso, crie um novo projeto selecionando **Empty Views Activity**.
-:::
-
-3. Preencha as configurações:
-   - **Name**: `MeuPrimeiroApp`
-   - **Package name**: `com.exemplo.meuprimeiroapp`
-   - **Language**: Kotlin
-   - **Minimum SDK**: API 26 (Android 8.0) — cobre mais de 95% dos dispositivos
-
-Clique em **Finish** e aguarde o Gradle sincronizar as dependências.
-
-:::note[Jetpack Compose]
-O Jetpack Compose é a abordagem moderna do Google para criar UIs Android — mais concisa e sem XML. Este material usa o modelo com XML e Views porque é mais fácil de entender os fundamentos do Android antes de migrar para Compose. Após dominar o que está aqui, vale explorar o Compose.
-:::
-
-### 3.3 Estrutura do Projeto
-
-Com o template **Empty Views Activity**, a estrutura criada é:
-
-```
-app/
- ├── src/
- │   └── main/
- │       ├── java/com.exemplo.meuprimeiroapp/
- │       │   └── MainActivity.kt       ← código Kotlin
- │       ├── res/
- │       │   ├── layout/
- │       │   │   └── activity_main.xml ← layout da tela em XML
- │       │   └── values/
- │       │       └── strings.xml       ← textos do app
- │       └── AndroidManifest.xml       ← configuração do app
- └── build.gradle.kts                  ← dependências do módulo
-```
-
-- **MainActivity.kt**: ponto de entrada da tela principal
-- **res/layout/activity_main.xml**: define a interface visual em XML — esta pasta só existe no template Views
-- **AndroidManifest.xml**: declara Activities, permissões e configurações do app
-- **build.gradle.kts**: onde você adiciona bibliotecas externas
-
-## 4. Seu Primeiro App: Olá Mundo
-
-Abra o arquivo `MainActivity.kt`. Com o template **Empty Views Activity**, você verá:
-
-```kotlin
-class MainActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-    }
-}
-```
-
-E o arquivo `activity_main.xml`:
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical">
-
-    <TextView
-        android:id="@+id/textOla"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Olá, Mundo!"
-        android:textSize="24sp" />
-
-    <Button
-        android:id="@+id/btnClicar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:text="Clique aqui" />
-
-</LinearLayout>
-```
-
-Agora vamos fazer o botão atualizar o texto ao ser clicado. No `MainActivity.kt`:
-
-```kotlin
-class MainActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-
-        val textOla = findViewById<TextView>(R.id.textOla)
-        val btnClicar = findViewById<Button>(R.id.btnClicar)
-
-        btnClicar.setOnClickListener {
-            textOla.text = "Você clicou!"
-        }
-    }
-}
-```
-
-Execute o app no emulador clicando em **Run** (triângulo verde) ou `Shift+F10`. O emulador vai iniciar e você verá seu app rodando!
-
-## 5. Sintaxe Básica do Kotlin
+## 3. Sintaxe Básica do Kotlin
 
 Antes de avançar, vale revisar os principais elementos da linguagem.
 
-### 5.1 Variáveis
+### 3.1 Variáveis
 
 ```kotlin
 val nome = "Android"       // imutável (não pode ser reatribuída)
@@ -194,7 +57,7 @@ var contador = 0           // mutável
 var texto: String? = null  // nullable — pode ser null
 ```
 
-### 5.2 Funções
+### 3.2 Funções
 
 ```kotlin
 fun somar(a: Int, b: Int): Int {
@@ -205,7 +68,7 @@ fun somar(a: Int, b: Int): Int {
 fun somar(a: Int, b: Int) = a + b
 ```
 
-### 5.3 Null Safety
+### 3.3 Null Safety
 
 ```kotlin
 var nome: String? = null
@@ -217,7 +80,7 @@ val tamanho = nome?.length  // retorna null se nome for null
 val tamanho = nome?.length ?: 0
 ```
 
-### 5.4 Classes e Data Classes
+### 3.4 Classes e Data Classes
 
 ```kotlin
 // classe normal
@@ -230,7 +93,7 @@ val produto = Produto(1, "Café", 12.90)
 val copia = produto.copy(preco = 10.00)
 ```
 
-### 5.5 When (substitui o switch)
+### 3.5 When (substitui o switch)
 
 ```kotlin
 val nota = 8
@@ -243,7 +106,7 @@ val conceito = when {
 }
 ```
 
-### 5.6 Lambdas e Higher-Order Functions
+### 3.6 Lambdas e Higher-Order Functions
 
 ```kotlin
 val numeros = listOf(1, 2, 3, 4, 5)
@@ -253,48 +116,3 @@ val dobros = numeros.map { it * 2 }            // [2, 4, 6, 8, 10]
 val soma = numeros.reduce { acc, n -> acc + n } // 15
 ```
 
-## 6. Ciclo de Vida de uma Activity
-
-Uma Activity no Android passa por diferentes estados ao longo de sua existência. Entender isso é fundamental para evitar bugs comuns como perda de dados ou consumo desnecessário de recursos.
-
-```
-onCreate  → onStart → onResume → [App rodando]
-                                      ↓
-                               onPause → onStop → onDestroy
-```
-
-| Método | Quando é chamado |
-|--------|-----------------|
-| `onCreate` | Activity criada — inicialize UI aqui |
-| `onStart` | Activity ficando visível |
-| `onResume` | Activity em foco (usuário interagindo) |
-| `onPause` | Activity perdendo foco (outra abrindo por cima) |
-| `onStop` | Activity não mais visível |
-| `onDestroy` | Activity sendo destruída |
-
-```kotlin
-class MainActivity : AppCompatActivity() {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        // inicializar UI e dados
-    }
-
-    override fun onResume() {
-        super.onResume()
-        // reiniciar animações, sensores, etc.
-    }
-
-    override fun onPause() {
-        super.onPause()
-        // pausar o que consome recursos
-    }
-}
-```
-
-:::tip[Dica]
-Na maioria dos apps, você vai trabalhar principalmente com `onCreate`. Os outros métodos só precisam ser sobrescritos quando houver comportamento específico para aquele estado.
-:::
-
-Com esses fundamentos você já consegue criar telas simples e entender como o Android organiza o código. Nas próximas seções vamos avançar para layouts mais complexos, navegação entre telas e consumo de APIs.

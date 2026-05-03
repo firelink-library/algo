@@ -1,0 +1,210 @@
+---
+sidebar:
+  order: 4
+slug: kotlin-funcoes
+title: "Funções"
+---
+
+Funções em Kotlin têm recursos que vão muito além do que o Java oferece. Parâmetros com valores padrão, argumentos nomeados, extension functions e scope functions tornam o código mais expressivo e reduzem muito a verbosidade típica do desenvolvimento Android.
+
+## Declaração Básica
+
+```kotlin
+fun somar(a: Int, b: Int): Int {
+    return a + b
+}
+
+// expression body — quando o corpo é uma única expressão
+fun somar(a: Int, b: Int) = a + b
+
+// sem retorno (Unit é opcional de escrever)
+fun log(mensagem: String): Unit {
+    println(mensagem)
+}
+fun log(mensagem: String) {  // equivalente
+    println(mensagem)
+}
+```
+
+## Parâmetros com Valor Padrão
+
+```kotlin
+fun criarUsuario(
+    nome: String,
+    idade: Int = 18,
+    ativo: Boolean = true
+) {
+    println("$nome, $idade anos, ativo: $ativo")
+}
+
+criarUsuario("Ana")                    // Ana, 18 anos, ativo: true
+criarUsuario("Carlos", 25)             // Carlos, 25 anos, ativo: true
+criarUsuario("Bia", 30, false)         // Bia, 30 anos, ativo: false
+```
+
+Valores padrão eliminam a necessidade de criar várias versões sobrecarregadas da mesma função — algo muito comum em código Java.
+
+## Argumentos Nomeados
+
+Ao chamar uma função, você pode nomear os argumentos. Isso melhora a legibilidade e permite passar na ordem que quiser:
+
+```kotlin
+criarUsuario(nome = "Ana", ativo = false)       // pula idade, usa valor padrão
+criarUsuario(ativo = false, nome = "Carlos")    // ordem diferente
+```
+
+## Varargs
+
+Quando você não sabe quantos argumentos serão passados:
+
+```kotlin
+fun somar(vararg numeros: Int): Int {
+    return numeros.sum()
+}
+
+somar(1, 2, 3)        // 6
+somar(10, 20)         // 30
+
+// spread operator para passar um array
+val valores = intArrayOf(1, 2, 3, 4)
+somar(*valores)       // 10
+```
+
+## Extension Functions
+
+Esse é um dos recursos mais poderosos do Kotlin. Você pode adicionar funções a classes existentes **sem modificá-las** — inclusive classes do Android SDK ou do Java.
+
+```kotlin
+// adicionando uma função à classe String
+fun String.capitalizar(): String {
+    return this.lowercase().replaceFirstChar { it.uppercase() }
+}
+
+"kotlin".capitalizar()  // "Kotlin"
+
+// adicionando à classe Int
+fun Int.ehPar(): Boolean = this % 2 == 0
+
+4.ehPar()   // true
+7.ehPar()   // false
+```
+
+No Android, extension functions são muito usadas para simplificar o código:
+
+```kotlin
+// mostrar/esconder View com uma linha
+fun View.mostrar() { visibility = View.VISIBLE }
+fun View.esconder() { visibility = View.GONE }
+
+// uso
+binding.progressBar.esconder()
+binding.listaItens.mostrar()
+```
+
+## Higher-Order Functions
+
+Funções que recebem ou retornam outras funções:
+
+```kotlin
+// recebe uma função como parâmetro
+fun executar(acao: () -> Unit) {
+    println("Antes")
+    acao()
+    println("Depois")
+}
+
+executar { println("Executando!") }
+// Antes
+// Executando!
+// Depois
+
+// com parâmetros na função passada
+fun transformar(valor: Int, transformacao: (Int) -> Int): Int {
+    return transformacao(valor)
+}
+
+transformar(5) { it * 2 }    // 10
+transformar(5) { it + 100 }  // 105
+```
+
+## Lambdas
+
+Lambdas são funções anônimas que você pode guardar em variáveis ou passar como argumento:
+
+```kotlin
+// lambda guardada em variável
+val dobrar: (Int) -> Int = { numero -> numero * 2 }
+val saudar: (String) -> String = { nome -> "Olá, $nome!" }
+
+dobrar(5)       // 10
+saudar("Ana")   // "Olá, Ana!"
+
+// quando há um único parâmetro, use 'it'
+val dobrar2: (Int) -> Int = { it * 2 }
+```
+
+## Scope Functions
+
+As scope functions (`let`, `apply`, `run`, `also`, `with`) são muito usadas no desenvolvimento Android. Elas executam um bloco de código no contexto de um objeto.
+
+### `let` — transformar ou verificar nullable
+
+```kotlin
+val nome: String? = "Kotlin"
+
+// executa o bloco apenas se nome não for null
+nome?.let { n ->
+    println("O nome tem ${n.length} caracteres")
+}
+
+// encadeando transformações
+val resultado = "  kotlin  "
+    .let { it.trim() }
+    .let { it.uppercase() }
+// "KOTLIN"
+```
+
+### `apply` — configurar um objeto
+
+```kotlin
+// sem apply
+val intent = Intent(this, DetalheActivity::class.java)
+intent.putExtra("id", 42)
+intent.putExtra("nome", "Produto X")
+intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+
+// com apply — retorna o próprio objeto
+val intent = Intent(this, DetalheActivity::class.java).apply {
+    putExtra("id", 42)
+    putExtra("nome", "Produto X")
+    flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+}
+startActivity(intent)
+```
+
+### `also` — efeitos colaterais (logging, validação)
+
+```kotlin
+val lista = mutableListOf<String>()
+    .also { println("Lista criada") }
+
+lista
+    .also { println("Antes: $it") }
+    .add("item")
+    .also { println("Depois: $lista") }
+```
+
+### `run` — executar um bloco e retornar o resultado
+
+```kotlin
+val comprimentoOuZero = nome?.run {
+    if (length > 5) length else 0
+} ?: 0
+```
+
+:::tip[Qual usar?]
+- **`let`**: checar nullable ou encadear transformações
+- **`apply`**: configurar um objeto recém-criado
+- **`also`**: adicionar logging ou validação sem alterar o objeto
+- **`run`**: quando precisa do resultado de um bloco no contexto do objeto
+:::
