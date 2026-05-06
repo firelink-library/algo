@@ -1,0 +1,182 @@
+---
+sidebar:
+  order: 1
+slug: android-fundamentos
+title: "Fundamentos Android"
+---
+
+Android é um sistema operacional mobile de código aberto baseado em Linux, mantido pelo Google. O desenvolvimento nativo de apps é feito em Kotlin (ou Java) usando o Android SDK e o Android Studio como IDE.
+
+## 1. Estrutura de um Projeto Android
+
+Ao criar um projeto no Android Studio, você encontra essa estrutura:
+
+```
+MeuApp/
+├── app/
+│   ├── src/
+│   │   └── main/
+│   │       ├── java/com/exemplo/meuapp/   ← código Kotlin
+│   │       ├── res/                        ← recursos (layouts, imagens, strings)
+│   │       │   ├── layout/
+│   │       │   ├── drawable/
+│   │       │   └── values/
+│   │       └── AndroidManifest.xml         ← declaração do app
+│   └── build.gradle.kts                    ← dependências do módulo
+└── build.gradle.kts                        ← configuração global
+```
+
+## 2. AndroidManifest.xml
+
+O arquivo `AndroidManifest.xml` é o "registro" do app — declara tudo que o sistema precisa saber antes de executá-lo.
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- permissões que o app precisa -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher">
+
+        <!-- cada tela (Activity) precisa ser declarada aqui -->
+        <activity android:name=".MainActivity">
+            <!-- indica que esta é a tela inicial do app -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+</manifest>
+```
+
+## 3. Activity
+
+Uma `Activity` representa uma **tela** do app. É a unidade básica de interação com o usuário.
+
+```kotlin
+class MainActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)  // define o layout da tela
+    }
+}
+```
+
+O `AppCompatActivity` é a base padrão — ela traz compatibilidade com versões mais antigas do Android e suporte a recursos modernos como ActionBar.
+
+## 4. Ciclo de Vida da Activity
+
+O Android controla quando sua Activity aparece, some ou é destruída. Entender esse ciclo é fundamental para evitar bugs como crashes e vazamentos de memória.
+
+```
+onCreate()   → a Activity está sendo criada (inicialização)
+onStart()    → a Activity está visível
+onResume()   → a Activity está em foco, o usuário pode interagir
+onPause()    → outra Activity está vindo para frente
+onStop()     → a Activity não está mais visível
+onDestroy()  → a Activity está sendo destruída
+```
+
+
+```kotlin
+class MainActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        // inicializa componentes, configura listeners
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // boa hora para retomar animações ou atualizações de dados
+    }
+
+    override fun onPause() {
+        super.onPause()
+        // pause o que não precisa rodar em segundo plano
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // limpe recursos para evitar vazamento de memória
+    }
+}
+```
+
+**Regra prática**: o que você inicia em `onResume()`, pare em `onPause()`. O que você cria em `onCreate()`, destrua em `onDestroy()`.
+
+## 5. Intent
+
+`Intent` é o mecanismo para **navegar entre telas** ou para pedir que outro app realize algo.
+
+### Navegar para outra Activity
+
+```kotlin
+// ir para outra tela
+val intent = Intent(this, DetalheActivity::class.java)
+startActivity(intent)
+
+// passar dados para a próxima tela
+intent.putExtra("produto_id", 42)
+intent.putExtra("nome", "Café")
+startActivity(intent)
+```
+
+### Receber dados na próxima Activity
+
+```kotlin
+class DetalheActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        val produtoId = intent.getIntExtra("produto_id", 0)
+        val nome = intent.getStringExtra("nome") ?: ""
+    }
+}
+```
+
+### Intent implícito (abre outro app)
+
+```kotlin
+// abrir URL no navegador
+val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://developer.android.com"))
+startActivity(intent)
+
+// fazer uma ligação
+val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:+5511999999999"))
+startActivity(intent)
+```
+
+## 6. Resources (res/)
+
+Os recursos ficam em `res/` e são acessados via `R.tipo.nome` no código ou `@tipo/nome` no XML.
+
+| Pasta             | O que guarda                              |
+|-------------------|-------------------------------------------|
+| `res/layout/`     | arquivos XML de tela                      |
+| `res/drawable/`   | imagens e ícones                          |
+| `res/values/`     | strings, cores, dimensões                 |
+| `res/mipmap/`     | ícones do launcher em diferentes tamanhos |
+
+```xml
+<!-- res/values/strings.xml -->
+<resources>
+    <string name="app_name">Meu App</string>
+    <string name="botao_salvar">Salvar</string>
+</resources>
+```
+
+```kotlin
+// acessando no código
+val nome = getString(R.string.app_name)
+```
+
+```xml
+<!-- acessando no XML -->
+<Button android:text="@string/botao_salvar" />
+```

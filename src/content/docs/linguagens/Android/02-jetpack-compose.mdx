@@ -1,0 +1,233 @@
+---
+sidebar:
+  order: 2
+slug: android-jetpack-compose
+title: "UI com Jetpack Compose"
+---
+
+Jetpack Compose é o toolkit moderno do Android para construir interfaces. Em vez de escrever XML e manipular Views no código, você descreve a UI com funções Kotlin — é declarativo, reativo e muito mais conciso.
+
+Não vamos focar em aprender com XML, porém é interessante saber as diferenças e como trabalhar com este formato uma vez que é comum ver esse sistema legado nas empresas. Para isso, separei alguns materias para vocês olharem:
+- Jetpack Compose vs XML in Android: A Detailed Comparison (https://medium.com/@YodgorbekKomilo/jetpack-compose-vs-xml-in-android-a-detailed-comparison-aa411f5391d9)
+
+## 1. Conceito Declarativo
+
+**Declarativo (Compose)**: você descreve *como a UI deve parecer* dado um estado. O Compose cuida das atualizações.
+
+```kotlin
+@Composable
+fun Saudacao(nome: String) {
+    Text(text = "Olá, $nome!")
+}
+```
+
+Quando o estado muda, o Compose **recompõe** — chama a função novamente e atualiza só o que mudou.
+Qualquer função anotada com `@Composable` pode emitir UI. A convenção é usar PascalCase (como classes).
+
+```kotlin
+@Composable
+fun CartaoDeUsuario(nome: String, email: String) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(text = nome, style = MaterialTheme.typography.titleLarge)
+        Text(text = email, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+```
+
+Composables podem chamar outros composables — a UI é uma árvore de funções.
+
+## 2. Componentes Básicos
+
+### Text
+
+```kotlin
+Text(
+    text = "Hello Android",
+    color = Color.DarkGray,
+    fontSize = 20.sp,
+    fontWeight = FontWeight.Bold
+)
+```
+
+### Button
+
+```kotlin
+Button(onClick = { /* ação */ }) {
+    Text("Clique aqui")
+}
+
+// botão com ícone
+Button(onClick = { }) {
+    Icon(Icons.Default.Add, contentDescription = null)
+    Spacer(Modifier.width(8.dp))
+    Text("Adicionar")
+}
+```
+
+### TextField
+
+```kotlin
+var texto by remember { mutableStateOf("") }
+
+TextField(
+    value = texto,
+    onValueChange = { texto = it },
+    label = { Text("Nome") },
+    singleLine = true
+)
+```
+
+### Image
+
+```kotlin
+Image(
+    painter = painterResource(id = R.drawable.logo),
+    contentDescription = "Logo do app",
+    modifier = Modifier.size(80.dp)
+)
+```
+
+## 3. Layouts
+
+### Column — empilha verticalmente
+
+```kotlin
+Column(
+    modifier = Modifier.fillMaxWidth().padding(16.dp),
+    verticalArrangement = Arrangement.spacedBy(8.dp),
+    horizontalAlignment = Alignment.CenterHorizontally
+) {
+    Text("Primeiro")
+    Text("Segundo")
+    Text("Terceiro")
+}
+```
+
+### Row — coloca lado a lado
+
+```kotlin
+Row(
+    modifier = Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.CenterVertically
+) {
+    Text("Nome")
+    Text("João")
+}
+```
+
+### Box — empilha um sobre o outro
+
+```kotlin
+Box(modifier = Modifier.size(100.dp)) {
+    Image(painter = painterResource(R.drawable.fundo), contentDescription = null)
+    Text("Sobre a imagem", modifier = Modifier.align(Alignment.Center))
+}
+```
+
+## 4. Modifier
+
+`Modifier` é a forma de aplicar decorações e comportamentos a qualquer composable. Na prática, basta chamar uma das funções da classe Modifier para:
+
+- Mudar o tamanho, o layout, o comportamento e a aparência do elemento
+- Adicionar informações, como rótulos de acessibilidade
+- Processar a entrada do usuário
+- Adicionar interações de nível superior, como tornar um elemento clicável, rolável, arrastável ou redimensionável
+
+```kotlin
+Text(
+    text = "Exemplo",
+    modifier = Modifier
+        .fillMaxWidth()       // ocupa toda a largura
+        .padding(16.dp)       // espaçamento interno
+        .background(Color.LightGray)  // cor de fundo
+        .clickable { }        // torna clicável
+)
+```
+
+A ordem dos modifiers importa — `padding` antes de `background` deixa o padding fora do fundo; depois, fica dentro.
+
+## 5. Estado com remember e mutableStateOf
+
+Estado é o que muda na sua UI. No Compose, você precisa que o estado seja **observável** para o framework reagir às mudanças.
+
+```kotlin
+@Composable
+fun Contador() {
+    var contador by remember { mutableStateOf(0) }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("Contador: $contador", style = MaterialTheme.typography.headlineMedium)
+        Button(onClick = { contador++ }) {
+            Text("Incrementar")
+        }
+    }
+}
+```
+
+- `remember`: mantém o valor entre recomposições
+- `mutableStateOf`: cria um estado observável — quando muda, o Compose recompõe 
+
+## 6. Material 3 — Tema e Componentes
+
+O Compose integra com Material Design 3 por padrão. Envolva seu app em `MaterialTheme`:
+
+```kotlin
+@Composable
+fun MeuAppTheme(content: @Composable () -> Unit) {
+    MaterialTheme(
+        colorScheme = lightColorScheme(
+            primary = Color(0xFF6750A4),
+            secondary = Color(0xFF625B71)
+        ),
+        content = content
+    )
+}
+```
+
+Componentes prontos do Material 3:
+
+```kotlin
+// barra superior
+TopAppBar(title = { Text("Meu App") })
+
+// card
+Card(modifier = Modifier.fillMaxWidth()) {
+    Text("Conteúdo", modifier = Modifier.padding(16.dp))
+}
+
+// chip de filtro
+FilterChip(selected = true, onClick = { }, label = { Text("Ativo") })
+
+// FAB (botão flutuante de ação)
+FloatingActionButton(onClick = { }) {
+    Icon(Icons.Default.Add, contentDescription = "Adicionar")
+}
+```
+
+## 7. Scaffold — Estrutura de Tela
+
+`Scaffold` monta a estrutura padrão de uma tela com barra superior, barra inferior e botão flutuante:
+
+```kotlin
+@Composable
+fun TelaPrincipal() {
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text("Tarefas") })
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { /* nova tarefa */ }) {
+                Icon(Icons.Default.Add, contentDescription = "Nova tarefa")
+            }
+        }
+    ) { paddingValues ->
+        // o conteúdo principal recebe o padding do Scaffold
+        ListaDeTarefas(
+            tarefas = listOf(),
+            modifier = Modifier.padding(paddingValues)
+        )
+    }
+}
+```
+
