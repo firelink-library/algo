@@ -1,0 +1,278 @@
+---
+sidebar:
+  order: 6
+slug: android-dados-rede
+title: "Dados e Rede"
+---
+
+Quase todo app real busca dados de uma API ou os salva localmente. No Android, o padrão é usar **Retrofit** para rede e **Room** para banco de dados local, com **coroutines** para não bloquear a thread principal.
+
+## 1. Retrofit — Consumo de APIs
+
+Retrofit transforma uma interface Kotlin em chamadas HTTP.
+
+Adicione as dependências:
+
+```kotlin
+implementation("com.squareup.retrofit2:retrofit:2.11.0")
+implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
+```
+
+### Definindo o modelo
+
+```kotlin
+data class Produto(
+    val id: Int,
+    val nome: String,
+    val preco: Double,
+    val descricao: String
+)
+```
+
+### Definindo a interface da API
+
+```kotlin
+interface ProdutoApi {
+
+    @GET("produtos")
+    suspend fun listarTodos(): List<Produto>
+
+    @GET("produtos/{id}")
+    suspend fun buscarPorId(@Path("id") id: Int): Produto
+
+    @POST("produtos")
+    suspend fun criar(@Body produto: Produto): Produto
+
+    @PUT("produtos/{id}")
+    suspend fun atualizar(@Path("id") id: Int, @Body produto: Produto): Produto
+
+    @DELETE("produtos/{id}")
+    suspend fun deletar(@Path("id") id: Int)
+
+    @GET("produtos")
+    suspend fun buscar(@Query("nome") nome: String): List<Produto>
+}
+```
+
+`suspend` permite chamar dentro de uma coroutine — a função suspende a coroutine enquanto espera a resposta, sem bloquear a thread.
+
+### Configurando o Retrofit
+
+```kotlin
+object RetrofitClient {
+
+    private val logging = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.BODY
+    }
+
+    private val client = OkHttpClient.Builder()
+        .addInterceptor(logging)
+        .build()
+
+    val api: ProdutoApi = Retrofit.Builder()
+        .baseUrl("https://api.exemplo.com/")
+        .client(client)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+        .create(ProdutoApi::class.java)
+}
+```
+
+### Usando no ViewModel
+
+```kotlin
+class ProdutosViewModel : ViewModel() {
+
+    private val api = RetrofitClient.api
+
+    private val _produtos = MutableStateFlow<List<Produto>>(emptyList())
+    val produtos: StateFlow<List<Produto>> = _produtos.asStateFlow()
+
+    var erro by mutableStateOf<String?>(null)
+        private set
+
+    var carregando by mutableStateOf(false)
+        private set
+
+    fun carregar() {
+        viewModelScope.launch {
+            carregando = true
+            erro = null
+            try {
+                _produtos.value = api.listarTodos()
+            } catch (e: Exception) {
+                erro = "Falha ao carregar: ${e.message}"
+            } finally {
+                carregando = false
+            }
+        }
+    }
+}
+```
+
+## 2. Room — Banco de Dados Local
+
+Room é uma camada de abstração sobre o SQLite. Define tabelas como data classes e queries como funções.
+
+Adicione as dependências:
+
+```kotlin
+implementation("androidx.room:room-runtime:2.6.1")
+implementation("androidx.room:room-ktx:2.6.1")
+ksp("androidx.room:room-compiler:2.6.1")  // requer o plugin KSP
+```
+
+No `build.gradle.kts` do projeto:
+
+```kotlin
+plugins {
+    id("com.google.devtools.ksp") version "1.9.24-1.0.20" apply false
+}
+```
+
+No `build.gradle.kts` do módulo `app`:
+
+```kotlin
+plugins {
+    id("com.google.devtools.ksp")
+}
+```
+
+### Entity — tabela
+
+```kotlin
+@Entity(tableName = "tarefas")
+data class Tarefa(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val titulo: String,
+    val descricao: String = "",
+    val concluida: Boolean = false,
+    val criadaEm: Long = System.currentTimeMillis()
+)
+```
+
+### DAO — operações no banco
+
+```kotlin
+@Dao
+interface TarefaDao {
+
+    @Query("SELECT * FROM tarefas ORDER BY criadaEm DESC")
+    fun observarTodas(): Flow<List<Tarefa>>  // emite sempre que o dado muda
+
+    @Query("SELECT * FROM tarefas WHERE id = :id")
+    suspend fun buscarPorId(id: Int): Tarefa?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun inserir(tarefa: Tarefa)
+
+    @Update
+    suspend fun atualizar(tarefa: Tarefa)
+
+    @Delete
+    suspend fun deletar(tarefa: Tarefa)
+
+    @Query("DELETE FROM tarefas WHERE concluida = 1")
+    suspend fun deletarConcluidas()
+}
+```
+
+`Flow<List<Tarefa>>` no DAO é reativo — toda vez que o banco muda, o Flow emite a lista atualizada.
+
+### Database
+
+```kotlin
+@Database(entities = [Tarefa::class], version = 1)
+abstract class AppDatabase : RoomDatabase() {
+    abstract fun tarefaDao(): TarefaDao
+}
+```
+
+### Singleton do banco
+
+```kotlin
+object DatabaseProvider {
+    @Volatile private var instancia: AppDatabase? = null
+
+    fun get(context: Context): AppDatabase =
+        instancia ?: synchronized(this) {
+            Room.databaseBuilder(
+                context.applicationContext,
+                AppDatabase::class.java,
+                "app_database"
+            ).build().also { instancia = it }
+        }
+}
+```
+
+### Usando no ViewModel
+
+```kotlin
+class TarefasViewModel(context: Context) : ViewModel() {
+
+    private val dao = DatabaseProvider.get(context).tarefaDao()
+
+    val tarefas: StateFlow<List<Tarefa>> = dao.observarTodas()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    fun adicionarTarefa(titulo: String) {
+        viewModelScope.launch {
+            dao.inserir(Tarefa(titulo = titulo))
+        }
+    }
+
+    fun concluir(tarefa: Tarefa) {
+        viewModelScope.launch {
+            dao.atualizar(tarefa.copy(concluida = true))
+        }
+    }
+}
+```
+
+## 3. Repositório — camada de dados
+
+O padrão **Repository** isola a origem dos dados (API ou banco local) do resto do app. O ViewModel não sabe se os dados vêm da rede ou do disco.
+
+```kotlin
+class TarefaRepositorio(
+    private val dao: TarefaDao,
+    private val api: TarefaApi
+) {
+    val tarefas: Flow<List<Tarefa>> = dao.observarTodas()
+
+    suspend fun sincronizar() {
+        val remotas = api.listarTarefas()
+        remotas.forEach { dao.inserir(it) }
+    }
+
+    suspend fun salvar(tarefa: Tarefa) {
+        dao.inserir(tarefa)
+    }
+}
+```
+
+## 4. DataStore — preferências simples
+
+Para guardar configurações e preferências (sem criar um banco inteiro), use `DataStore`:
+
+```kotlin
+implementation("androidx.datastore:datastore-preferences:1.1.1")
+```
+
+```kotlin
+object ConfigDataStore {
+
+    private val Context.dataStore by preferencesDataStore("config")
+    private val TEMA_ESCURO = booleanPreferencesKey("tema_escuro")
+
+    fun observarTemaEscuro(context: Context): Flow<Boolean> =
+        context.dataStore.data.map { prefs -> prefs[TEMA_ESCURO] ?: false }
+
+    suspend fun salvarTema(context: Context, escuro: Boolean) {
+        context.dataStore.edit { prefs -> prefs[TEMA_ESCURO] = escuro }
+    }
+}
+```
+
+Use `DataStore` para booleanos, strings e números simples. Para dados estruturados, use Room.

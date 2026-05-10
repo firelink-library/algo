@@ -1,0 +1,168 @@
+---
+sidebar:
+  order: 5
+slug: android-navegacao
+title: "Navegação"
+---
+
+O Navigation Component é a forma oficial de gerenciar navegação entre telas no Android. Funciona com Fragments (XML) e com Jetpack Compose, mantendo a pilha de telas organizada.
+
+## 1. Navegação no Compose com NavController
+
+Adicione a dependência:
+
+```kotlin
+implementation("androidx.navigation:navigation-compose:2.7.7")
+```
+
+### Rotas como constantes
+
+Defina as rotas antes de usar:
+
+```kotlin
+object Rotas {
+    const val LISTA = "lista"
+    const val DETALHE = "detalhe/{id}"
+    const val FORMULARIO = "formulario"
+}
+```
+
+### Configurando o NavHost
+
+O `NavHost` define o grafo de navegação — todas as telas e como se conectam:
+
+```kotlin
+@Composable
+fun AppNavegacao() {
+    val navController = rememberNavController()
+
+    NavHost(
+        navController = navController,
+        startDestination = Rotas.LISTA
+    ) {
+        composable(Rotas.LISTA) {
+            TelaLista(
+                onItemClicado = { id ->
+                    navController.navigate("detalhe/$id")
+                }
+            )
+        }
+
+        composable(
+            route = Rotas.DETALHE,
+            arguments = listOf(navArgument("id") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val id = backStackEntry.arguments?.getInt("id") ?: 0
+            TelaDetalhe(
+                id = id,
+                onVoltar = { navController.popBackStack() }
+            )
+        }
+
+        composable(Rotas.FORMULARIO) {
+            TelaFormulario(
+                onSalvar = {
+                    navController.popBackStack()  // volta para a tela anterior
+                }
+            )
+        }
+    }
+}
+```
+
+### NavController nas telas
+
+Passe apenas as ações necessárias para cada tela — não passe o `navController` inteiro. Isso facilita testes e mantém as telas independentes.
+
+```kotlin
+// Correto: passa só o callback de navegação
+@Composable
+fun TelaLista(onItemClicado: (Int) -> Unit) {
+    // ...
+}
+
+// Evitar: acopla a tela ao mecanismo de navegação
+@Composable
+fun TelaLista(navController: NavController) {
+    // ...
+}
+```
+
+## 2. BottomNavigationBar
+
+Para apps com navegação por abas inferiores, combine `NavController` com `NavigationBar`:
+
+```kotlin
+sealed class AbaDestino(val rota: String, val icone: ImageVector, val titulo: String) {
+    object Inicio : AbaDestino("inicio", Icons.Default.Home, "Início")
+    object Busca : AbaDestino("busca", Icons.Default.Search, "Buscar")
+    object Perfil : AbaDestino("perfil", Icons.Default.Person, "Perfil")
+}
+
+val abas = listOf(AbaDestino.Inicio, AbaDestino.Busca, AbaDestino.Perfil)
+
+@Composable
+fun AppComAbas() {
+    val navController = rememberNavController()
+    val entrada by navController.currentBackStackEntryAsState()
+    val rotaAtual = entrada?.destination?.route
+
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                abas.forEach { aba ->
+                    NavigationBarItem(
+                        selected = rotaAtual == aba.rota,
+                        onClick = {
+                            navController.navigate(aba.rota) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = { Icon(aba.icone, contentDescription = aba.titulo) },
+                        label = { Text(aba.titulo) }
+                    )
+                }
+            }
+        }
+    ) { padding ->
+        NavHost(
+            navController = navController,
+            startDestination = AbaDestino.Inicio.rota,
+            modifier = Modifier.padding(padding)
+        ) {
+            composable(AbaDestino.Inicio.rota) { TelaInicio() }
+            composable(AbaDestino.Busca.rota) { TelaBusca() }
+            composable(AbaDestino.Perfil.rota) { TelaPerfil() }
+        }
+    }
+}
+```
+
+As opções dentro do `navigate { }` garantem que:
+- `popUpTo + saveState`: não empilha múltiplas cópias da mesma aba
+- `launchSingleTop`: não recria a tela se já está no topo
+- `restoreState`: restaura o scroll e o estado ao voltar para a aba
+
+## 3. Passando dados entre telas
+
+Para tipos simples (Int, String, Boolean), use argumentos na rota:
+
+```kotlin
+// enviar
+navController.navigate("detalhe/42")
+
+// receber
+composable("detalhe/{id}", arguments = listOf(
+    navArgument("id") { type = NavType.IntType }
+)) { entry ->
+    val id = entry.arguments!!.getInt("id")
+    TelaDetalhe(id = id)
+}
+```
+
+Para objetos complexos, prefira **buscar pelo ID no ViewModel** em vez de serializar o objeto inteiro na rota.
+
